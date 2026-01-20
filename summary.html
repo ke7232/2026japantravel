@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>個人消費分析 - 2026 日本行</title>
+    <title>記帳分析 - 2026 日本行</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { 
             --primary: #76c7ff; --bg: #f7f9fc; --soft: #e3f2fd;
+            --accent: #ffcb05; --danger: #ff7675;
         }
         body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; }
         header { background: white; padding: 15px 20px; display: flex; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
@@ -15,29 +16,34 @@
         
         .container { padding: 20px; max-width: 500px; margin: auto; }
 
+        /* 總額卡片進化版 */
         .total-card { 
-            background: linear-gradient(135deg, #76c7ff, #5da9e9); color: white; padding: 30px 20px; 
+            background: linear-gradient(135deg, #76c7ff, #5da9e9); color: white; padding: 25px; 
             border-radius: 30px; text-align: center; box-shadow: 0 12px 30px rgba(93,169,233,0.3); 
             margin-bottom: 25px;
         }
+        .avg-info {
+            background: rgba(255, 255, 255, 0.15); border-radius: 15px;
+            padding: 10px; margin-top: 15px; display: flex; justify-content: space-around;
+            font-size: 13px;
+        }
 
         .chart-box { 
-            background: white; padding: 25px; border-radius: 30px; 
+            background: white; padding: 22px; border-radius: 30px; 
             box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 25px; 
             text-align: center; border: 1px solid #f0f4f8;
         }
         
-        /* 下拉選單樣式 */
         .filter-select {
             width: 100%; padding: 12px; border-radius: 15px; border: 2px solid var(--soft);
-            background: #fafafa; font-size: 16px; color: #555; outline: none; margin-bottom: 20px;
-            font-weight: bold; text-align: center;
+            background: #fafafa; font-size: 15px; color: #555; outline: none; margin-bottom: 15px;
+            font-weight: bold; -webkit-appearance: none; text-align: center;
         }
 
-        h3 { color: #555; font-size: 15px; margin: 0 0 20px; }
+        h3 { color: #555; font-size: 15px; margin: 0 0 18px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
         #loading-container { padding: 100px 20px; text-align: center; }
-        .progress-bar { width: 200px; height: 8px; background: #eee; border-radius: 10px; margin: 15px auto; overflow: hidden; position: relative; }
+        .progress-bar { width: 180px; height: 6px; background: #eee; border-radius: 10px; margin: 15px auto; overflow: hidden; position: relative; }
         .progress-inner { width: 40%; height: 100%; background: var(--primary); border-radius: 10px; position: absolute; animation: loading-move 1.5s infinite ease-in-out; }
         @keyframes loading-move { 0% { left: -40%; } 50% { left: 40%; width: 60%; } 100% { left: 100%; } }
     </style>
@@ -48,38 +54,47 @@
     <div class="back-btn" onclick="location.href='index.html'">
         <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#76c7ff" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
     </div>
-    <b style="font-size: 18px;">📊 消費數據分析</b>
+    <b style="font-size: 18px;">📊 旅行消費統計報表</b>
 </header>
 
 <div id="loading-container">
-    <div style="font-size: 14px; color: #aaa;">✨ 正在分析帳目數據...</div>
+    <div style="font-size: 14px; color: #aaa;">✨ 正在生成精美圖表...</div>
     <div class="progress-bar"><div class="progress-inner"></div></div>
 </div>
 
 <div class="container" id="main-ui" style="display:none;">
     <div class="total-card">
-        <div style="font-size: 14px; opacity: 0.9;">全家累計總支出</div>
+        <div style="font-size: 13px; opacity: 0.9; letter-spacing: 1px;">全家旅程總支出估算</div>
         <div id="sumJPY" style="font-size: 38px; font-weight: bold; margin: 5px 0;">¥ 0</div>
         <div id="sumTWD" style="font-size: 14px; opacity: 0.8;">約台幣 $0 元</div>
+        <div class="avg-info">
+            <div>👥 均分(5人) <br> <b id="avgJPY">¥ 0</b></div>
+            <div>🇹🇼 均分(台幣) <br> <b id="avgTWD">$ 0</b></div>
+        </div>
     </div>
 
     <div class="chart-box">
-        <h3>👤 成員支出排名</h3>
+        <h3>📈 每日消費趨勢 (JPY)</h3>
+        <canvas id="trendChart" style="max-height: 200px;"></canvas>
+    </div>
+
+    <div class="chart-box">
+        <h3>👤 成員代墊排名</h3>
         <canvas id="userChart"></canvas>
     </div>
 
     <div class="chart-box">
         <h3>🍱 消費分類分析</h3>
         <select class="filter-select" id="userFilter" onchange="updateCatChart()">
-            <option value="all">📊 全體成員佔比</option>
-            <option value="航">🙋‍♂️ 航 的消費</option>
-            <option value="安">🙋‍♀️ 安 的消費</option>
-            <option value="香">🙋‍♀️ 香 的消費</option>
-            <option value="瑩">🙋‍♀️ 瑩 的消費</option>
-            <option value="廷">🙋‍♂️ 廷 的消費</option>
+            <option value="all">📊 查看全體成員</option>
+            <option value="航">🙋‍♂️ 查看 航 的消費</option>
+            <option value="安">🙋‍♀️ 查看 安 的消費</option>
+            <option value="香">🙋‍♀️ 查看 香 的消費</option>
+            <option value="瑩">🙋‍♀️ 查看 瑩 的消費</option>
+            <option value="廷">🙋‍♂️ 查看 廷 的消費</option>
         </select>
         <canvas id="catChart"></canvas>
-        <div id="noDataMsg" style="display:none; color:#ccc; padding:30px;">該成員尚無消費記錄 ✨</div>
+        <div id="noDataMsg" style="display:none; color:#ccc; padding:30px;">該成員目前沒有記帳紀錄 ✨</div>
     </div>
 </div>
 
@@ -89,12 +104,9 @@
     let catChartInstance = null;
     let exchangeRate = 0.215;
 
-    // 1. 抓取數據
     async function fetchData() {
         if(localStorage.getItem('isLoggedIn') !== 'true') return location.href='index.html';
-        
         try {
-            // 同時抓匯率與資料
             const [rateRes, dataRes] = await Promise.all([
                 fetch('https://open.er-api.com/v6/latest/JPY'),
                 fetch(GAS_URL + "?type=history")
@@ -103,25 +115,55 @@
             exchangeRate = rateData.rates.TWD;
             allExpenses = await dataRes.json();
 
-            processGeneralStats();
+            processHeaderStats();
             document.getElementById('loading-container').style.display = 'none';
             document.getElementById('main-ui').style.display = 'block';
 
+            renderTrendChart();
             renderUserChart();
-            updateCatChart(); // 初始載入全體佔比
-            
+            updateCatChart();
         } catch(e) { document.getElementById('loading-container').innerHTML = "❌ 讀取失敗"; }
     }
 
-    // 2. 處理總金額與成員數據
-    function processGeneralStats() {
-        let total = 0;
-        allExpenses.forEach(row => total += (parseFloat(row.日幣金額) || 0));
-        document.getElementById('sumJPY').innerText = `¥ ${Math.round(total).toLocaleString()}`;
-        document.getElementById('sumTWD').innerText = `約台幣 $${Math.round(total * exchangeRate).toLocaleString()} 元 (${exchangeRate.toFixed(3)})`;
+    function processHeaderStats() {
+        let total = allExpenses.reduce((s, r) => s + (parseFloat(r.日幣金額) || 0), 0);
+        const twdTotal = Math.round(total * exchangeRate);
+        
+        document.getElementById('sumJPY').innerText = `¥ ${total.toLocaleString()}`;
+        document.getElementById('sumTWD').innerText = `約台幣 $${twdTotal.toLocaleString()} 元 (${exchangeRate.toFixed(3)})`;
+        document.getElementById('avgJPY').innerText = `¥ ${Math.round(total / 5).toLocaleString()}`;
+        document.getElementById('avgTWD').innerText = `$ ${Math.round(twdTotal / 5).toLocaleString()}`;
     }
 
-    // 3. 渲染成員排名圖表 (固定不變)
+    // 新增：趨勢圖
+    function renderTrendChart() {
+        let days = {};
+        allExpenses.forEach(row => {
+            const date = new Date(row.時間);
+            const dateStr = `${date.getMonth()+1}/${date.getDate()}`;
+            days[dateStr] = (days[dateStr] || 0) + (parseFloat(row.日幣金額) || 0);
+        });
+
+        new Chart(document.getElementById('trendChart'), {
+            type: 'line',
+            data: {
+                labels: Object.keys(days),
+                datasets: [{
+                    data: Object.values(days),
+                    borderColor: '#76c7ff',
+                    backgroundColor: 'rgba(118, 199, 255, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 5
+                }]
+            },
+            options: { 
+                plugins: { legend: { display: false } },
+                scales: { y: { display: false }, x: { grid: { display: false } } }
+            }
+        });
+    }
+
     function renderUserChart() {
         let userStats = {};
         allExpenses.forEach(row => {
@@ -134,68 +176,62 @@
             data: {
                 labels: Object.keys(userStats),
                 datasets: [{
-                    label: '支出金額 (JPY)',
                     data: Object.values(userStats),
-                    backgroundColor: '#76c7ff',
-                    borderRadius: 10
+                    backgroundColor: ['#76c7ff', '#ffcb05', '#ff9f40', '#4bc0c0', '#9966ff'],
+                    borderRadius: 8
                 }]
             },
             options: { 
                 indexAxis: 'y',
                 plugins: { legend: { display: false } },
-                scales: { x: { grid: { display: false } } }
+                scales: { 
+                    x: { ticks: { display: false }, grid: { display: false }, border: { display: false } },
+                    y: { grid: { display: false }, border: { display: false } }
+                }
             }
         });
     }
 
-    // 4. 更新分類佔比圖表 (具備個人篩選功能)
     function updateCatChart() {
         const filterUser = document.getElementById('userFilter').value;
         let catStats = {};
-        
-        // 篩選資料
-        const filtered = filterUser === 'all' 
-            ? allExpenses 
-            : allExpenses.filter(row => row.記錄人 === filterUser);
+        const filtered = filterUser === 'all' ? allExpenses : allExpenses.filter(row => row.記錄人 === filterUser);
 
         if(filtered.length === 0) {
             document.getElementById('catChart').style.display = 'none';
             document.getElementById('noDataMsg').style.display = 'block';
             return;
-        } else {
-            document.getElementById('catChart').style.display = 'block';
-            document.getElementById('noDataMsg').style.display = 'none';
         }
+        document.getElementById('catChart').style.display = 'block';
+        document.getElementById('noDataMsg').style.display = 'none';
 
         filtered.forEach(row => {
             const cat = row.類別 || "雜";
             catStats[cat] = (catStats[cat] || 0) + (parseFloat(row.日幣金額) || 0);
         });
 
-        const ctx = document.getElementById('catChart');
-        if(catChartInstance) catChartInstance.destroy(); // 銷毀舊圖表
-
-        catChartInstance = new Chart(ctx, {
+        if(catChartInstance) catChartInstance.destroy();
+        catChartInstance = new Chart(document.getElementById('catChart'), {
             type: 'doughnut',
             data: {
                 labels: Object.keys(catStats),
                 datasets: [{
                     data: Object.values(catStats),
-                    backgroundColor: ['#ff6384','#36a2eb','#cc65fe','#ffce56','#4bc0c0','#a2d2ff'],
-                    borderWidth: 5,
+                    backgroundColor: ['#ff7675','#74b9ff','#55efc4','#ffeaa7','#a29bfe','#fab1a0'],
+                    borderWidth: 6,
                     borderColor: '#ffffff'
                 }]
             },
             options: {
-                cutout: '65%',
+                cutout: '70%',
                 plugins: {
-                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15 } },
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } },
                     tooltip: {
                         callbacks: {
                             label: (ctx) => {
-                                let total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                                let percentage = Math.round((ctx.parsed / total) * 100);
-                                return ` ${ctx.label}: ¥${ctx.parsed.toLocaleString()} (${percentage}%)`;
+                                const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+                                const pct = Math.round((ctx.parsed/total)*100);
+                                return ` ${ctx.label}: ¥${ctx.parsed.toLocaleString()} (${pct}%)`;
                             }
                         }
                     }
