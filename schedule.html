@@ -3,43 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>每日行程 - 2026 日本行</title>
+    <title>每日行程 - 管理版</title>
     <style>
-        :root { --primary: #76c7ff; --bg: #f7f9fc; }
-        body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; }
+        :root { --primary: #76c7ff; --bg: #f7f9fc; --danger: #ff5e5e; }
+        body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; }
         header { background: white; padding: 15px 20px; display: flex; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
-        .back-btn { margin-right: 15px; cursor: pointer; display: flex; align-items: center; }
+        .back-btn { margin-right: 15px; cursor: pointer; }
+        
+        /* 日期導覽 */
         .date-selector { display: flex; overflow-x: auto; padding: 15px; gap: 12px; background: white; border-bottom: 1px solid #eee; scrollbar-width: none; }
-        .date-selector::-webkit-scrollbar { display: none; }
-        .date-box { min-width: 65px; padding: 12px 5px; background: #fff; border: 1px solid #eee; border-radius: 18px; text-align: center; flex-shrink: 0; transition: 0.3s; }
-        .date-box.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold; }
-        .timeline { padding: 20px; position: relative; }
-        .timeline::before { content: ''; position: absolute; left: 30px; top: 0; bottom: 0; width: 2px; background: #e0e6ed; z-index: 1; }
-        .timeline-item { position: relative; margin-bottom: 25px; padding-left: 45px; z-index: 2; }
-        .timeline-dot { position: absolute; left: 24px; top: 5px; width: 14px; height: 14px; background: white; border: 3px solid var(--primary); border-radius: 50%; }
-        .card { background: white; border-radius: 20px; padding: 18px; box-shadow: 0 3px 12px rgba(0,0,0,0.05); }
+        .date-box { min-width: 65px; padding: 12px 5px; background: #fff; border: 1px solid #eee; border-radius: 18px; text-align: center; flex-shrink: 0; }
+        .date-box.active { background: var(--primary); color: white; font-weight: bold; box-shadow: 0 5px 15px rgba(118,199,255,0.3); }
+
+        /* 行程卡片 */
+        .timeline { padding: 20px; }
+        .card { background: white; border-radius: 20px; padding: 18px; margin-bottom: 20px; box-shadow: 0 3px 12px rgba(0,0,0,0.05); position: relative; }
         .time-label { font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 5px; }
-        h4 { margin: 0 0 8px; font-size: 17px; }
-        .card-content { font-size: 15px; color: #666; line-height: 1.6; white-space: pre-wrap; }
-        #loading { text-align: center; padding: 100px 0; color: #aaa; }
+        .delete-btn { position: absolute; top: 15px; right: 15px; color: #ccc; cursor: pointer; font-size: 18px; padding: 5px; }
+        .delete-btn:hover { color: var(--danger); }
+        h4 { margin: 0 0 8px; font-size: 17px; padding-right: 30px; }
+        .card-content { font-size: 15px; color: #666; white-space: pre-wrap; }
+
+        /* 底部新增按鈕 */
+        .add-fab { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 5px 20px rgba(118,199,255,0.5); cursor: pointer; border: none; z-index: 2000; }
+        
+        #loading { text-align: center; padding: 50px; color: #aaa; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="back-btn" onclick="location.href='index.html'">
-        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#76c7ff" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-    </div>
-    <b style="font-size: 18px;">📅 2026 日本行程</b>
+    <div class="back-btn" onclick="location.href='index.html'"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#76c7ff" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+    <b style="font-size: 18px;">📅 行程管理系統</b>
 </header>
 
 <div class="date-selector" id="dateSelector"></div>
-<div id="loading">✨ 搬運行程中...</div>
+<div id="loading">✨ 讀取資料中...</div>
 <div class="timeline" id="scheduleContainer"></div>
+
+<button class="add-fab" onclick="showAddPrompt()">＋</button>
 
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxktADedYUP_K5X8S0aJ-f0XKGjev2qOuNZi1LNN7E5vq1b26KA-71Oc1IZnR1drgYfdg/exec";
     let allData = [];
+    let currentActiveDate = "";
 
     async function fetchSchedule() {
         if(localStorage.getItem('isLoggedIn') !== 'true') return location.href='index.html';
@@ -49,11 +56,8 @@
             allData.sort((a, b) => (a.時間 > b.時間 ? 1 : -1));
             document.getElementById('loading').style.display = 'none';
             renderDates();
-            const today = new Date();
-            const dateStr = `${today.getFullYear()}/${(today.getMonth()+1).toString().padStart(2,'0')}/${today.getDate().toString().padStart(2,'0')}`;
-            const dates = [...new Set(allData.map(d => d.日期))];
-            showDay(dates.includes(dateStr) ? dateStr : dates[0]);
-        } catch(e) { document.getElementById('loading').innerText = "讀取失敗"; }
+            showDay(currentActiveDate || allData[0].日期);
+        } catch(e) { document.getElementById('loading').innerText = "連線失敗"; }
     }
 
     function renderDates() {
@@ -68,19 +72,58 @@
     }
 
     function showDay(targetDate, el) {
+        currentActiveDate = targetDate;
         document.querySelectorAll('.date-box').forEach(b => b.classList.remove('active'));
         const activeBtn = el || document.getElementById(`btn-${targetDate.replace(/\//g,'')}`);
         if(activeBtn) activeBtn.classList.add('active');
+
         const filtered = allData.filter(d => d.日期 === targetDate);
         document.getElementById('scheduleContainer').innerHTML = filtered.map(item => `
-            <div class="timeline-item"><div class="timeline-dot"></div>
-                <div class="card">
-                    <div class="time-label">🕙 ${item.時間}</div>
-                    <h4>${item.標題}</h4>
-                    <div class="card-content">${item.內容}</div>
-                </div>
+            <div class="card">
+                <div class="delete-btn" onclick="handleDelete('${item.日期}', '${item.時間}', '${item.標題}')">🗑️</div>
+                <div class="time-label">🕙 ${item.時間}</div>
+                <h4>${item.標題}</h4>
+                <div class="card-content">${item.內容}</div>
             </div>`).join('');
     }
+
+    // 刪除邏輯：密碼確認
+    async function handleDelete(date, time, title) {
+        const pass = prompt("請輸入刪除密碼以確認動作：");
+        if (pass === "9453") {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading').innerText = "正在刪除...";
+            await fetch(GAS_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify({ action: "delete", date, time, title })
+            });
+            setTimeout(fetchSchedule, 1500); // 重新抓取資料
+        } else if (pass !== null) {
+            alert("密碼錯誤，拒絕刪除！");
+        }
+    }
+
+    // 新增邏輯：手動輸入
+    async function showAddPrompt() {
+        const title = prompt("請輸入行程標題 (例：逛街)：");
+        if(!title) return;
+        const time = prompt("請輸入時間 (格式 14:30)：", "12:00");
+        const content = prompt("請輸入詳細內容：");
+        const date = prompt("請確認日期 (格式 2026/03/01)：", currentActiveDate);
+
+        if (confirm(`確定要在 ${date} ${time} 新增「${title}」嗎？`)) {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading').innerText = "正在新增...";
+            await fetch(GAS_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify({ action: "add", date, time, title, content })
+            });
+            setTimeout(fetchSchedule, 1500);
+        }
+    }
+
     fetchSchedule();
 </script>
 </body>
