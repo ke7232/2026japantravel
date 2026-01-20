@@ -121,7 +121,13 @@
             activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center' });
         }
         const container = document.getElementById('scheduleContainer');
-        const filtered = allData.filter(d => d.日期 === targetDate);
+        
+        // 強化過濾邏輯：無論 Sheet 回傳 yyyy/MM/dd 或 yyyy-MM-dd 通通轉為 yyyy/MM/dd
+        const filtered = allData.filter(d => {
+            const cleanDate = d.日期.replace(/-/g, '/');
+            return cleanDate === targetDate;
+        });
+        
         container.innerHTML = filtered.length ? filtered.map(item => `
             <div class="card">
                 <div class="delete-btn" onclick="openDelModal('${item.日期}', '${item.時間}', '${item.標題}')">🗑️</div>
