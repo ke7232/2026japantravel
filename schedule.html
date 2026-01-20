@@ -6,7 +6,7 @@
     <title>每日行程</title>
     <style>
         :root { 
-            --primary: #76c7ff; --bg: #f7f9fc; --danger: #ff5e5e; --soft: #e3f2fd;
+            --primary: #76c7ff; --bg: #f7f9fc; --danger: #ff5e5e; --soft: #e3f2fd; --edit: #a29bfe;
             --day1: #a2d2ff; --day2: #74b9ff; --day3: #81ecec; 
             --day4: #ff7675; --day5: #fab1a0; --day6: #fdcb6e;
         }
@@ -18,12 +18,10 @@
         .date-selector::-webkit-scrollbar { display: none; }
         .date-box { min-width: 80px; padding: 12px 5px; background: #fff; border: 2px solid #f0f0f0; border-radius: 20px; text-align: center; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: 0.3s; cursor: pointer;}
         .date-box.active { border-width: 2px; }
-        .date-box.active[data-day="1"] { border-color: var(--day1); box-shadow: 0 4px 10px rgba(162,210,255,0.5); }
-        .date-box.active[data-day="2"] { border-color: var(--day2); box-shadow: 0 4px 10px rgba(116,185,255,0.5); }
-        .date-box.active[data-day="3"] { border-color: var(--day3); box-shadow: 0 4px 10px rgba(129,236,236,0.5); }
-        .date-box.active[data-day="4"] { border-color: var(--day4); box-shadow: 0 4px 10px rgba(255,118,117,0.5); }
-        .date-box.active[data-day="5"] { border-color: var(--day5); box-shadow: 0 4px 10px rgba(250,177,160,0.5); }
-        .date-box.active[data-day="6"] { border-color: var(--day6); box-shadow: 0 4px 10px rgba(253,203,110,0.5); }
+        .date-box.active[data-day="1"] { border-color: var(--day1); }
+        .date-box.active[data-day="2"] { border-color: var(--day2); }
+        .date-box.active[data-day="3"] { border-color: var(--day3); }
+        /* ... 其他顏色 ... */
 
         #loading-container { padding: 40px 20px; text-align: center; }
         .progress-bar { width: 100%; max-width: 200px; height: 8px; background: #eee; border-radius: 10px; margin: 15px auto; overflow: hidden; position: relative; }
@@ -33,13 +31,25 @@
         .timeline { padding: 10px 20px; }
         .card { background: white; border-radius: 22px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); position: relative; border-left: 6px solid var(--primary); }
         .time-label { font-size: 13px; font-weight: 800; color: var(--primary); margin-bottom: 6px; }
-        .delete-btn { position: absolute; top: 18px; right: 18px; color: #eee; cursor: pointer; font-size: 18px; transition: 0.2s; }
-        .delete-btn:hover { color: var(--danger); }
-        h4 { margin: 0 0 10px; font-size: 18px; padding-right: 35px; color: #2d3436; font-weight: 700; }
+        
+        /* 按鈕群組 */
+        .card-actions { position: absolute; top: 18px; right: 18px; display: flex; gap: 12px; }
+        .action-btn { cursor: pointer; font-size: 18px; opacity: 0.3; transition: 0.2s; }
+        .action-btn:hover { opacity: 1; }
+
+        h4 { margin: 0 0 10px; font-size: 18px; padding-right: 60px; color: #2d3436; font-weight: 700; }
         .card-content { font-size: 14px; color: #636e72; white-space: pre-wrap; line-height: 1.6; }
 
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-        .modal { width: 85%; max-width: 350px; background: white; border-radius: 32px; padding: 30px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); }
+        .modal { width: 85%; max-width: 350px; background: white; border-radius: 32px; padding: 30px; }
+        .modal h2 { margin: 0 0 15px; font-size: 20px; color: var(--primary); text-align: center; }
+        .modal-label { font-size: 12px; color: #bbb; margin: 10px 0 5px 5px; display: block; }
+        .modal input, .modal select, .modal textarea { width: 100%; padding: 12px; border: 2px solid var(--soft); border-radius: 15px; box-sizing: border-box; font-size: 16px; outline: none; background: #fafafa; }
+        .modal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .modal-btn { padding: 12px; border-radius: 15px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-cancel { background: #f0f0f0; color: #888; }
+        .btn-confirm { background: var(--primary); color: white; }
+        
         .add-fab { position: fixed; bottom: 30px; right: 25px; width: 65px; height: 65px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; border: none; box-shadow: 0 8px 25px rgba(118,199,255,0.5); z-index: 2000; cursor: pointer; }
     </style>
 </head>
@@ -51,17 +61,34 @@
 <div class="date-selector" id="dateSelector"></div>
 
 <div id="loading-container">
-    <div style="font-size: 14px; color: #aaa;">✈️ 正在從雲端讀取行程...</div>
+    <div style="font-size: 14px; color: #aaa;">✈️ 正在處理中...</div>
     <div class="progress-bar"><div class="progress-inner"></div></div>
 </div>
 
 <div class="timeline" id="scheduleContainer"></div>
 <button class="add-fab" onclick="openAddModal()">＋</button>
 
+<div id="modal-overlay" class="modal-overlay">
+    <div class="modal">
+        <h2 id="modalTitle">新增行程 📝</h2>
+        <input type="hidden" id="editOldKey"> <span class="modal-label">行程標題</span>
+        <input type="text" id="formTitle" placeholder="例如：築地市場吃早餐">
+        <span class="modal-label">預計時間</span>
+        <select id="formTime"></select>
+        <span class="modal-label">備註內容</span>
+        <textarea id="formContent" rows="3" placeholder="交通方式、地點、必吃項目..."></textarea>
+        <div class="modal-btns">
+            <button class="modal-btn btn-cancel" onclick="closeModals()">取消</button>
+            <button class="modal-btn btn-confirm" id="submitBtn" onclick="processForm()">確定</button>
+        </div>
+    </div>
+</div>
+
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxktADedYUP_K5X8S0aJ-f0XKGjev2qOuNZi1LNN7E5vq1b26KA-71Oc1IZnR1drgYfdg/exec";
     let allData = [];
     let currentActiveDate = "";
+    let isEditMode = false;
     
     const TRIP_DATES = [
         { d: "2026/03/01", label: "3/1(日)", icon: "❄️" }, { d: "2026/03/02", label: "3/2(一)", icon: "❄️" },
@@ -69,74 +96,115 @@
         { d: "2026/03/05", label: "3/5(四)", icon: "🛍️" }, { d: "2026/03/06", label: "3/6(五)", icon: "✈️" }
     ];
 
+    function initTimeOptions() {
+        const select = document.getElementById('formTime');
+        for(let h=0; h<24; h++) {
+            for(let m of ['00', '30']) {
+                let t = `${String(h).padStart(2,'0')}:${m}`;
+                select.add(new Option(t, t));
+            }
+        }
+    }
+
     async function fetchSchedule() {
         try {
             const resp = await fetch(GAS_URL + "?type=schedule");
-            const rawData = await resp.json();
-            
-            // 排序邏輯 + 防錯處理
-            allData = rawData.sort((a, b) => {
-                const parseTime = (t) => {
-                    // 如果欄位空白或格式不符，回傳極大值排到最後
-                    if (!t || typeof t !== 'string' || !t.includes(':')) return 9999;
-                    const parts = t.split(':');
-                    const h = parseInt(parts[0], 10);
-                    const m = parseInt(parts[1], 10);
-                    return isNaN(h) || isNaN(m) ? 9999 : h * 60 + m;
-                };
-                return parseTime(a.時間) - parseTime(b.時間);
-            });
-
+            allData = await resp.json();
+            allData.sort((a,b) => (a.時間||"99:99").localeCompare(b.時間||"99:99"));
             document.getElementById('loading-container').style.display = 'none';
             renderDates();
-            
-            const now = new Date();
-            const todayStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
-            const exists = TRIP_DATES.find(item => item.d === todayStr);
-            showDay(exists ? todayStr : TRIP_DATES[0].d);
-            
-        } catch(e) { 
-            console.error("Fetch Error:", e);
-            document.getElementById('loading-container').innerHTML = "❌ 資料讀取失敗，請確認網路或 Sheet 內容是否正確。"; 
-        }
+            showDay(currentActiveDate || TRIP_DATES[0].d);
+        } catch(e) { document.getElementById('loading-container').innerHTML = "❌ 讀取失敗"; }
     }
 
     function renderDates() {
         document.getElementById('dateSelector').innerHTML = TRIP_DATES.map((item, i) => `
-            <div class="date-box" id="btn-${item.d.replace(/\//g,'')}" data-day="${i+1}" onclick="showDay('${item.d}', this)">
+            <div class="date-box" id="btn-${item.d.replace(/\//g,'')}" onclick="showDay('${item.d}', this)">
                 <div style="font-size:24px;">${item.icon}</div>
                 <div style="font-size:12px; font-weight:bold;">${item.label}</div>
-                <div style="font-size:10px; color:#aaa;">Day ${i+1}</div>
             </div>`).join('');
     }
 
     function showDay(targetDate, el) {
         currentActiveDate = targetDate;
         document.querySelectorAll('.date-box').forEach(b => b.classList.remove('active'));
-        const btnId = `btn-${targetDate.replace(/\//g,'')}`;
-        const activeBtn = el || document.getElementById(btnId);
-        if(activeBtn) { 
-            activeBtn.classList.add('active'); 
-            activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); 
-        }
+        const activeBtn = el || document.getElementById(`btn-${targetDate.replace(/\//g,'')}`);
+        if(activeBtn) activeBtn.classList.add('active');
         
         const container = document.getElementById('scheduleContainer');
-        // 過濾機制加入防錯：排除無日期的損壞資料列
-        const filtered = allData.filter(d => {
-            if (!d.日期) return false; 
-            return d.日期.toString().replace(/-/g, '/') === targetDate;
-        });
+        const filtered = allData.filter(d => d.日期 && d.日期.toString().replace(/-/g, '/') === targetDate);
         
         container.innerHTML = filtered.length ? filtered.map(item => `
             <div class="card">
-                <div class="delete-btn" onclick="openDelModal('${item.日期}', '${item.時間}', '${item.標題}')">🗑️</div>
+                <div class="card-actions">
+                    <div class="action-btn" onclick="openEditModal('${item.時間}','${item.標題}','${item.內容}')">✏️</div>
+                    <div class="action-btn" onclick="handleDelete('${item.時間}','${item.標題}')">🗑️</div>
+                </div>
                 <div class="time-label">🕙 ${item.時間 || 'N/A'}</div>
-                <h4>${item.標題 || '(無標題行程)'}</h4>
-                <div class="card-content">${item.內容 || '(無詳細備註)'}</div>
+                <h4>${item.標題 || '(無標題)'}</h4>
+                <div class="card-content">${item.內容 || ''}</div>
             </div>`).join('') : '<div style="text-align:center; color:#ccc; margin-top:50px;">本日尚無行程 ✨</div>';
     }
 
-    // Modal 與其他邏輯省略...
+    // Modal 開啟邏輯
+    function openAddModal() {
+        isEditMode = false;
+        document.getElementById('modalTitle').innerText = "新增行程 📝";
+        document.getElementById('formTitle').value = "";
+        document.getElementById('formContent').value = "";
+        document.getElementById('modal-overlay').style.display = 'flex';
+    }
+
+    function openEditModal(time, title, content) {
+        isEditMode = true;
+        document.getElementById('modalTitle').innerText = "編輯行程 ✏️";
+        document.getElementById('formTitle').value = title;
+        document.getElementById('formTime').value = time;
+        document.getElementById('formContent').value = content;
+        // 紀錄舊的 Key (時間+標題) 用於搜尋比對
+        document.getElementById('editOldKey').value = JSON.stringify({oldTime: time, oldTitle: title});
+        document.getElementById('modal-overlay').style.display = 'flex';
+    }
+
+    function closeModals() { document.getElementById('modal-overlay').style.display = 'none'; }
+
+    // 處理表單送出
+    function processForm() {
+        const title = document.getElementById('formTitle').value;
+        const time = document.getElementById('formTime').value;
+        const content = document.getElementById('formContent').value;
+        if(!title) return alert("請輸入標題");
+
+        const payload = {
+            action: isEditMode ? "edit" : "add",
+            date: currentActiveDate,
+            time: time,
+            title: title,
+            content: content
+        };
+
+        if(isEditMode) {
+            const oldData = JSON.parse(document.getElementById('editOldKey').value);
+            payload.oldTime = oldData.oldTime;
+            payload.oldTitle = oldData.oldTitle;
+        }
+
+        sendRequest(payload);
+    }
+
+    function handleDelete(time, title) {
+        if(!confirm(`確定要刪除「${title}」嗎？`)) return;
+        sendRequest({ action: "delete", date: currentActiveDate, time, title });
+    }
+
+    function sendRequest(data) {
+        closeModals();
+        document.getElementById('loading-container').style.display = 'block';
+        fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(data) });
+        setTimeout(() => location.reload(), 1500);
+    }
+
+    initTimeOptions();
     fetchSchedule();
 </script>
 </body>
