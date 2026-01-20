@@ -1,14 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>記帳總覽</title>
-    <style>body { font-family: sans-serif; padding: 20px; text-align: center; background: #f0f8ff; }</style>
+    <title>2026 王家記帳統計</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --primary: #76c7ff; --bg: #f8f9fa; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #333; }
+        header { display: flex; align-items: center; margin-bottom: 20px; }
+        .back-btn { text-decoration: none; font-size: 24px; margin-right: 15px; color: #666; }
+        
+        /* 統計卡片 */
+        .summary-card { 
+            background: linear-gradient(135deg, #76c7ff, #5da9e9); 
+            color: white; padding: 25px; border-radius: 20px; 
+            text-align: center; box-shadow: 0 10px 20px rgba(93,169,233,0.3);
+            margin-bottom: 25px;
+        }
+        .total-amount { font-size: 36px; font-weight: bold; margin: 5px 0; }
+        .twd-amount { opacity: 0.9; font-size: 16px; }
+
+        /* 圖表區塊 */
+        .chart-container { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h3 { margin-top: 0; font-size: 16px; color: #888; text-align: center; }
+
+        /* 切換按鈕 */
+        .tab-group { display: flex; background: #eee; border-radius: 12px; padding: 4px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; border: none; padding: 10px; border-radius: 10px; background: none; cursor: pointer; color: #666; font-weight: bold; }
+        .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    </style>
 </head>
 <body>
-    <h1>📊 記帳統計</h1>
-    <p>正在努力計算大家花了多少錢... 建設中！</p>
-    <a href="index.html">⬅️ 返回計帳</a>
-</body>
-</html>
+
+<header>
+    <a href="index.html" class="back-btn">⬅</a>
+    <b style="font-size: 18px;">📊 支出統計總覽</b>
+</header>
+
+<div class="summary-card">
+    <div>目前總支出 (JPY)</div>
+    <div class="total-amount" id="totalJPY">¥ 0</div>
+    <div class="twd-amount" id="totalTWD">約台幣 $0 元</div>
+</div>
+
+<div class="tab-group">
+    <button class="tab-btn active" onclick="updateChart('user')">成員權重</button>
+    <button class="tab-btn" onclick="updateChart('category')">消費分類</button>
+</div>
+
+<div class="chart-container">
+    <h3 id="chartTitle">各成員支出比例</h3>
+    <canvas id="myChart"></canvas>
+</div>
+
+<div class="chart-container">
+    <h3>每日支出趨勢</h3>
+    <canvas id="lineChart"></canvas>
+</div>
+
+<script>
+    // 這裡之後可以寫一個 fetch 抓取你的 Google Sheet 資料
+    // 目前先用模擬資料讓你看樣式
+    const mockData = {
+        users: { "航": 15000, "安": 8000, "香": 12000, "瑩": 5000, "廷": 9000 },
+        categories: { "食": 12000, "行": 8000, "購物": 25000, "景點": 4000, "住": 0, "雜": 500 },
+        daily: [5000, 8000, 12000, 7000, 15000, 2000]
+    };
+
+    let mainChart;
+
+    function initCharts() {
+        const ctx = document.getElementById('myChart').getContext('2d');
+        mainChart = new Chart(ctx, {
+            type: 'doughnut', // 圓環圖
+            data: {
+                labels: Object.keys(mockData.users),
+                datasets: [{
+                    data: Object.values(mockData.users),
+                    backgroundColor: ['#76c7ff', '#ffcb05', '#ff9f40', '#4bc0c0', '#9966ff']
+                }]
