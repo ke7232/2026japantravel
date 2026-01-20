@@ -10,20 +10,19 @@
         .app-container { width: 100%; max-width: 500px; background: white; min-height: 100vh; position: relative; box-shadow: 0 0 30px rgba(0,0,0,0.05); }
         
         /* 登入遮罩 */
-        #login-overlay { position: fixed; inset: 0; background: #fff; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease; }
+        #login-overlay { position: fixed; inset: 0; background: #fff; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.5s ease; opacity: 1; }
         .login-card { width: 85%; max-width: 320px; text-align: center; }
 
         /* Header */
-        header { display: flex; justify-content: space-between; align-items: center; padding: 25px 20px; background: white; position: relative; }
-        .logo { font-size: 20px; font-weight: bold; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 25px 20px; background: white; border-bottom: 1px solid #f9f9f9; }
+        .logo { font-size: 19px; font-weight: bold; color: #333; }
         .menu-wrapper { position: relative; z-index: 1000; }
         .menu-icon { width: 40px; height: 40px; background: #fff; border-radius: 50%; box-shadow: 0 3px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid #f0f0f0; }
         .menu-icon svg { width: 22px; height: 22px; fill: #aaa; pointer-events: none; }
         
         .menu-dropdown { display: none; position: absolute; top: 50px; right: 0; background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-radius: 15px; min-width: 160px; border: 1px solid #f0faff; overflow: hidden; }
         .menu-dropdown.show { display: block; animation: popIn 0.2s ease; }
-        .menu-item { padding: 15px 18px; border-bottom: 1px solid #f9f9f9; font-size: 15px; cursor: pointer; display: block; text-decoration: none; color: inherit; }
-        .menu-item:active { background: #f0faff; }
+        .menu-item { padding: 15px 18px; border-bottom: 1px solid #f9f9f9; font-size: 15px; cursor: pointer; text-decoration: none; color: inherit; display: block; }
 
         /* 內容 */
         .content { padding: 0 20px 50px; }
@@ -34,6 +33,7 @@
         .user-group { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         .user-btn { background: #fff; border: 2px solid #f0f0f0; padding: 12px 0; border-radius: 50px; font-size: 13px; text-align: center; cursor: pointer; }
         .user-btn.active { border-color: var(--secondary); background: #fffdeb; color: #b48a00; font-weight: bold; }
+        
         .input-box { width: 100%; padding: 16px; margin-bottom: 12px; border: 2px solid #f0f4f8; border-radius: 20px; box-sizing: border-box; font-size: 16px; outline: none; background: #fafcfe; text-align: center; }
         .twd-hint { font-size: 13px; color: var(--primary); text-align: right; margin-top: -8px; margin-bottom: 15px; font-weight: bold; }
         .submit-btn { width: 100%; padding: 18px; background: linear-gradient(135deg, #76c7ff, #5da9e9); color: white; border: none; border-radius: 30px; font-size: 18px; font-weight: bold; box-shadow: 0 8px 15px rgba(93,169,233,0.3); cursor: pointer; }
@@ -47,7 +47,7 @@
         <div style="font-size: 50px; margin-bottom: 15px;">✈️</div>
         <div style="font-size: 22px; font-weight: bold; margin-bottom: 25px;">✨ 2026 王王王日本行 ✨</div>
         <input type="password" id="passInput" class="input-box" placeholder="輸入密碼 (1234)">
-        <button class="submit-btn" onclick="login()">出發Go ✈️</button>
+        <button class="submit-btn" id="goBtn">出發Go ✈️</button>
     </div>
 </div>
 
@@ -76,7 +76,7 @@
             <div class="selection-btn" onclick="selectCat(this, '雜')">🎈 雜</div>
             <div class="selection-btn" onclick="selectCat(this, '住')">🏨 住</div>
         </div>
-        <h3>✦ 2. 輸入金額與品名 ✦</h3>
+        <h3>✦ 2. 輸入明細 ✦</h3>
         <input type="number" id="amount" class="input-box" placeholder="日幣金額 (JPY)" inputmode="numeric" oninput="calcTWD()">
         <div id="twd-text" class="twd-hint"></div>
         <input type="text" id="item" class="input-box" placeholder="品名 (例：拉麵)">
@@ -97,5 +97,35 @@
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxktADedYUP_K5X8S0aJ-f0XKGjev2qOuNZi1LNN7E5vq1b26KA-71Oc1IZnR1drgYfdg/exec"; 
     let currentCat = "食", currentUser = "航";
 
-    function login() {
-        if (document.getElementById('
+    // 強化的登入邏輯
+    document.getElementById('goBtn').addEventListener('click', function() {
+        const pass = document.getElementById('passInput').value;
+        if (pass === '1234') {
+            const overlay = document.getElementById('login-overlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => { overlay.style.display = 'none'; }, 500);
+        } else {
+            alert('密碼不對喔！');
+        }
+    });
+
+    // 右上角選單修復
+    const menuToggle = document.getElementById('menuToggle'), menu = document.getElementById('menu');
+    menuToggle.addEventListener('click', (e) => { e.stopPropagation(); menu.classList.toggle('show'); });
+    document.addEventListener('click', () => menu.classList.remove('show'));
+
+    function selectCat(el, val) { document.querySelectorAll('.selection-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); currentCat = val; }
+    function selectUser(el, val) { document.querySelectorAll('.user-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); currentUser = val; }
+    function calcTWD() { const jpy = document.getElementById('amount').value; document.getElementById('twd-text').innerText = jpy ? `💰 約台幣 $${Math.round(jpy * 0.215)} 元` : ""; }
+
+    function submitData() {
+        const btn = document.getElementById('send-btn'), status = document.getElementById('status'), amount = document.getElementById('amount').value, item = document.getElementById('item').value;
+        if(!amount || !item) { alert('請填寫完整資訊'); return; }
+        btn.disabled = true; status.innerText = "正在聯絡皮卡丘...";
+        fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ category: currentCat, amount: amount, item: item, user: currentUser }) })
+        .then(() => { status.innerText = "✅ 成功存入！"; status.style.color = "#4CAF50"; document.getElementById('amount').value = ""; document.getElementById('item').value = ""; btn.disabled = false; })
+        .catch(() => { status.innerText = "❌ 失敗"; btn.disabled = false; });
+    }
+</script>
+</body>
+</html>
