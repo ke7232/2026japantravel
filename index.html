@@ -3,95 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>家。日本行計帳</title>
+    <title>2026 王王王日本行</title>
     <style>
-        :root { --primary: #5da9e9; --bg: #f8f9fa; --text: #333; }
-        body { font-family: -apple-system, "Noto Sans TC", sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; }
+        :root { --primary: #76c7ff; --secondary: #ffcb05; --bg: #eef7ff; --text: #444; }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; }
         
-        .app-container { width: 100%; max-width: 500px; background: white; min-height: 100vh; position: relative; padding-bottom: 40px; }
+        .app-container { width: 100%; max-width: 500px; background: white; min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
         
-        /* Header & Menu */
-        header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #eee; }
-        .logo { font-size: 20px; font-weight: bold; }
-        .menu-btn { font-size: 24px; cursor: pointer; padding: 5px; }
-        .menu-dropdown { display: none; position: absolute; top: 60px; right: 20px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px; z-index: 100; overflow: hidden; }
-        .menu-dropdown.show { display: block; }
-        .menu-item { padding: 15px 25px; border-bottom: 1px solid #eee; font-size: 16px; cursor: pointer; }
-        .menu-item:last-child { border: none; }
+        /* Header */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 25px 20px; background: white; }
+        .logo { font-size: 22px; font-weight: bold; color: #333; }
+        .menu-btn { font-size: 28px; cursor: pointer; color: var(--primary); }
+        
+        /* Dropdown Menu */
+        .menu-dropdown { display: none; position: absolute; top: 75px; right: 20px; background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 20px; z-index: 100; min-width: 180px; overflow: hidden; border: 2px solid #f0faff; }
+        .menu-dropdown.show { display: block; animation: popIn 0.3s ease; }
+        .menu-item { padding: 18px 20px; border-bottom: 1px solid #f9f9f9; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .menu-item:hover { background: #f0faff; }
 
-        .content { padding: 20px; }
-        h3 { margin-bottom: 10px; font-size: 16px; color: #666; font-weight: normal; }
+        .content { padding: 0 25px 50px; }
+        h3 { margin-bottom: 15px; font-size: 15px; color: #999; letter-spacing: 1px; }
 
-        /* Button Groups */
-        .btn-group { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 25px; }
-        .selection-btn { border: 2px solid #f0f0f0; background: #fff; padding: 12px 5px; border-radius: 12px; font-size: 14px; text-align: center; transition: 0.2s; cursor: pointer; }
-        .selection-btn.active { border-color: var(--primary); background-color: #eef7ff; color: var(--primary); font-weight: bold; }
+        /* Icon Buttons */
+        .btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 30px; }
+        .selection-btn { background: #f8fbff; border: 2px solid #f0f4f8; padding: 15px 5px; border-radius: 25px; font-size: 15px; text-align: center; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .selection-btn span { font-size: 22px; }
+        .selection-btn.active { border-color: var(--primary); background-color: #ffffff; box-shadow: 0 8px 15px rgba(118,199,255,0.2); transform: translateY(-3px); color: var(--primary); font-weight: bold; }
+
+        /* User Buttons (5 in a row) */
+        .user-group { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 30px; }
+        .user-btn { background: #fff; border: 2px solid #f0f0f0; padding: 12px 0; border-radius: 50px; font-size: 14px; text-align: center; cursor: pointer; }
+        .user-btn.active { border-color: var(--secondary); background: #fffdeb; color: #b48a00; font-weight: bold; box-shadow: 0 4px 10px rgba(255,203,5,0.2); }
 
         /* Inputs */
-        .input-box { width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; font-size: 18px; background: #fafafa; }
-        .twd-hint { font-size: 14px; color: #888; margin-top: -10px; margin-bottom: 15px; padding-left: 5px; }
+        .input-box { width: 100%; padding: 18px; margin-bottom: 15px; border: 2px solid #f0f4f8; border-radius: 25px; box-sizing: border-box; font-size: 17px; outline: none; transition: 0.3s; }
+        .input-box:focus { border-color: var(--primary); background: #fff; }
+        .twd-hint { font-size: 14px; color: var(--primary); margin-top: -10px; margin-bottom: 20px; font-weight: bold; text-align: right; }
 
-        .submit-btn { width: 100%; padding: 16px; background-color: var(--primary); color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: bold; box-shadow: 0 4px 10px rgba(93,169,233,0.3); }
-        .submit-btn:active { transform: scale(0.98); }
+        .submit-btn { width: 100%; padding: 18px; background: linear-gradient(135deg, #76c7ff, #5da9e9); color: white; border: none; border-radius: 30px; font-size: 18px; font-weight: bold; box-shadow: 0 10px 20px rgba(93,169,233,0.3); margin-top: 10px; cursor: pointer; }
         
-        #status { text-align: center; margin-top: 20px; font-weight: bold; }
+        /* Characters Style */
+        .character-img { width: 40px; vertical-align: middle; margin: 0 5px; }
+        
+        /* Login Page */
+        #login-overlay { position: fixed; inset: 0; background: #fff; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+        .login-title { font-size: 24px; color: #333; margin-bottom: 30px; }
+        .character-float { animation: float 3s ease-in-out infinite; width: 120px; margin-bottom: 20px; }
 
-        /* Login Overlay */
-        #login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:1000; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        @keyframes popIn { from { opacity:0; transform: scale(0.9); } to { opacity:1; transform: scale(1); } }
     </style>
 </head>
 <body>
 
 <div id="login-overlay">
-    <h2>🇯🇵 家族專屬計帳</h2>
-    <input type="password" id="passInput" class="input-box" style="width: 80%" placeholder="密碼 (1234)">
-    <button class="submit-btn" style="width: 80%" onclick="login()">登入</button>
+    <img src="https://img.icons8.com/color/144/pikachu.png" class="character-float">
+    <div class="login-title">✨ 2026 王王王日本行 ✨</div>
+    <input type="password" id="passInput" class="input-box" style="width: 85%" placeholder="輸入家族密碼 (1234)">
+    <button class="submit-btn" style="width: 85%" onclick="login()">開始計帳之旅</button>
 </div>
 
 <div class="app-container">
     <header>
-        <div class="logo">🇯🇵 日本行計帳</div>
-        <div class="menu-btn" onclick="toggleMenu()">☰</div>
+        <div class="logo">🇯🇵 2026 王家記帳</div>
+        <div class="menu-btn" onclick="toggleMenu()">⚪🔵⚪</div>
         <div id="menu" class="menu-dropdown">
-            <div class="menu-item" onclick="alert('行程功能建設中！')">📅 每日行程</div>
-            <div class="menu-item" onclick="alert('總覽功能建設中！')">📊 記帳總覽</div>
-            <div class="menu-item" onclick="alert('留言板功能建設中！')">💬 留言板</div>
+            <div class="menu-item">📅 每日行程</div>
+            <div class="menu-item">📊 記帳總覽</div>
+            <div class="menu-item">🎮 挑戰小遊戲 <span style="font-size: 12px; background: #ffefef; color: #ff5e5e; padding: 2px 6px; border-radius: 10px;">New</span></div>
         </div>
     </header>
 
     <div class="content">
-        <h3>1. 選擇分類</h3>
+        <h3>✦ 1. 選擇分類 ✦</h3>
         <div class="btn-group" id="cat-group">
-            <div class="selection-btn active" onclick="selectBtn('cat', this, '食')">食</div>
-            <div class="selection-btn" onclick="selectBtn('cat', this, '行')">行</div>
-            <div class="selection-btn" onclick="selectBtn('cat', this, '購物')">購物</div>
-            <div class="selection-btn" onclick="selectBtn('cat', this, '景點')">景點</div>
-            <div class="selection-btn" onclick="selectBtn('cat', this, '雜')">雜</div>
+            <div class="selection-btn active" onclick="selectBtn('cat', this, '食')"><span>🍱</span>食</div>
+            <div class="selection-btn" onclick="selectBtn('cat', this, '行')"><span>🚃</span>行</div>
+            <div class="selection-btn" onclick="selectBtn('cat', this, '購物')"><span>🛍️</span>購物</div>
+            <div class="selection-btn" onclick="selectBtn('cat', this, '景點')"><span>🗼</span>景點</div>
+            <div class="selection-btn" onclick="selectBtn('cat', this, '雜')"><span>🎈</span>雜</div>
+            <div class="selection-btn" onclick="selectBtn('cat', this, '住')"><span>🏨</span>住</div>
         </div>
 
-        <h3>2. 輸入金額與品名</h3>
+        <h3>✦ 2. 輸入明細 ✦</h3>
         <input type="number" id="amount" class="input-box" placeholder="日幣金額 (JPY)" inputmode="numeric" oninput="calcTWD()">
         <div id="twd-text" class="twd-hint"></div>
-        <input type="text" id="item" class="input-box" placeholder="品名 (例：晴空塔門票)">
+        <input type="text" id="item" class="input-box" placeholder="品名 (例：一蘭拉麵)">
 
-        <h3>3. 誰付的錢？</h3>
-        <div class="btn-group" id="user-group">
-            <div class="selection-btn active" onclick="selectBtn('user', this, '航')">航</div>
-            <div class="selection-btn" onclick="selectBtn('user', this, '安')">安</div>
-            <div class="selection-btn" onclick="selectBtn('user', this, '香')">香</div>
-            <div class="selection-btn" onclick="selectBtn('user', this, '瑩')">瑩</div>
-            <div class="selection-btn" onclick="selectBtn('user', this, '廷')">廷</div>
+        <h3>✦ 3. 誰出的錢 ✦</h3>
+        <div class="user-group" id="user-group">
+            <div class="user-btn active" onclick="selectBtn('user', this, '航')">航</div>
+            <div class="user-btn" onclick="selectBtn('user', this, '安')">安</div>
+            <div class="user-btn" onclick="selectBtn('user', this, '香')">香</div>
+            <div class="user-btn" onclick="selectBtn('user', this, '瑩')">瑩</div>
+            <div class="user-btn" onclick="selectBtn('user', this, '廷')">廷</div>
         </div>
 
-        <button id="send-btn" class="submit-btn" onclick="submitData()">送出紀錄</button>
-        <p id="status"></p>
+        <button id="send-btn" class="submit-btn" onclick="submitData()">完成並存檔 ✨</button>
+        <p id="status" style="text-align: center; margin-top: 15px;"></p>
+        
+        <div style="text-align: center; margin-top: 30px; opacity: 0.6;">
+            <img src="https://img.icons8.com/color/48/cinnamoroll.png" style="width: 30px;">
+            <img src="https://img.icons8.com/color/48/sonic-the-hedgehog.png" style="width: 30px; margin: 0 20px;">
+            <img src="https://img.icons8.com/color/48/pikachu.png" style="width: 30px;">
+        </div>
     </div>
 </div>
 
 <script>
-    // 已經幫你填入你的專屬網址囉！
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxktADedYUP_K5X8S0aJ-f0XKGjev2qOuNZi1LNN7E5vq1b26KA-71Oc1IZnR1drgYfdg/exec"; 
-    
     let currentCat = "食";
     let currentUser = "航";
 
@@ -101,13 +121,11 @@
         } else { alert('密碼錯誤！'); }
     }
 
-    function toggleMenu() {
-        document.getElementById('menu').classList.toggle('show');
-    }
+    function toggleMenu() { document.getElementById('menu').classList.toggle('show'); }
 
     function selectBtn(type, el, val) {
-        const parentId = type === 'cat' ? 'cat-group' : 'user-group';
-        document.querySelectorAll(`#${parentId} .selection-btn`).forEach(b => b.classList.remove('active'));
+        const selector = type === 'cat' ? '#cat-group .selection-btn' : '#user-group .user-btn';
+        document.querySelectorAll(selector).forEach(b => b.classList.remove('active'));
         el.classList.add('active');
         if(type === 'cat') currentCat = val;
         else currentUser = val;
@@ -115,9 +133,8 @@
 
     function calcTWD() {
         const jpy = document.getElementById('amount').value;
-        const rate = 0.215; 
-        const twd = Math.round(jpy * rate);
-        document.getElementById('twd-text').innerText = jpy ? `約台幣 $${twd} 元` : "";
+        const twd = Math.round(jpy * 0.215);
+        document.getElementById('twd-text').innerText = jpy ? `✨ 約台幣 $${twd} 元` : "";
     }
 
     function submitData() {
@@ -126,10 +143,10 @@
         const amount = document.getElementById('amount').value;
         const item = document.getElementById('item').value;
 
-        if(!amount || !item) { alert('請填寫完整資訊'); return; }
+        if(!amount || !item) { alert('哎呀！忘了填金額或品名喔'); return; }
 
         btn.disabled = true;
-        status.innerText = "傳送中...";
+        status.innerText = "正在聯絡皮卡丘傳送資料...";
         
         fetch(GAS_URL, {
             method: "POST",
@@ -141,14 +158,15 @@
                 user: currentUser
             })
         }).then(() => {
-            status.innerText = "✅ 成功存入 Google Sheets！";
-            status.style.color = "green";
+            status.innerText = "✅ 成功存入雲端試算表！";
+            status.style.color = "#4CAF50";
             document.getElementById('amount').value = "";
             document.getElementById('item').value = "";
             document.getElementById('twd-text').innerText = "";
             btn.disabled = false;
         }).catch(() => {
-            status.innerText = "❌ 失敗，請檢查網路";
+            status.innerText = "❌ 傳送失敗，請再試一次";
+            status.style.color = "#f44336";
             btn.disabled = false;
         });
     }
