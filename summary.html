@@ -3,60 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 王家記帳統計</title>
+    <title>記帳總覽 - 2026 日本行</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary: #76c7ff; --secondary: #ffcb05; --bg: #f8f9fa; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 0; color: #333; }
+        :root { --primary: #76c7ff; --bg: #f8f9fa; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding-bottom: 30px; }
         header { background: white; padding: 15px 20px; display: flex; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .back-btn { text-decoration: none; margin-right: 15px; cursor: pointer; }
-        
+        .back-btn { margin-right: 15px; cursor: pointer; }
         .container { padding: 20px; max-width: 500px; margin: auto; }
-        
-        /* 總額卡片 */
-        .total-card { 
-            background: linear-gradient(135deg, #76c7ff, #5da9e9); 
-            color: white; padding: 30px 20px; border-radius: 25px; 
-            text-align: center; box-shadow: 0 10px 25px rgba(93,169,233,0.3);
-            margin-bottom: 25px;
-        }
-        .total-amount { font-size: 38px; font-weight: bold; margin: 8px 0; }
-        .twd-amount { opacity: 0.9; font-size: 16px; font-weight: 500; }
-
-        /* 圖表區塊 */
-        .chart-box { background: white; padding: 20px; border-radius: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h3 { margin: 0 0 15px; font-size: 16px; color: #666; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; }
-
-        #loading-ui { text-align: center; padding: 100px 0; color: #aaa; }
+        .total-card { background: linear-gradient(135deg, #76c7ff, #5da9e9); color: white; padding: 30px 20px; border-radius: 25px; text-align: center; box-shadow: 0 10px 25px rgba(93,169,233,0.3); margin-bottom: 25px; }
+        .chart-box { background: white; padding: 20px; border-radius: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; text-align: center; }
+        h3 { color: #888; font-size: 15px; margin-bottom: 15px; }
+        #loading { text-align: center; padding: 100px 0; color: #aaa; }
     </style>
 </head>
 <body>
 
 <header>
-    <a href="index.html" class="back-btn">
+    <div class="back-btn" onclick="location.href='index.html'">
         <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#76c7ff" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-    </a>
+    </div>
     <b style="font-size: 18px;">📊 支出統計總覽</b>
 </header>
 
-<div id="loading-ui">✨ 正在計算大家花了多少錢...</div>
+<div id="loading">✨ 正在統計帳目...</div>
 
 <div class="container" id="main-ui" style="display:none;">
     <div class="total-card">
         <div>目前全家總支出 (JPY)</div>
-        <div class="total-amount" id="sumJPY">¥ 0</div>
-        <div class="twd-amount" id="sumTWD">約台幣 $0 元</div>
+        <div id="sumJPY" style="font-size: 38px; font-weight: bold; margin: 8px 0;">¥ 0</div>
+        <div id="sumTWD" style="opacity: 0.9; font-size: 16px;">約台幣 $0 元</div>
     </div>
-
-    <div class="chart-box">
-        <h3>👤 成員貢獻排名</h3>
-        <canvas id="userChart"></canvas>
-    </div>
-
-    <div class="chart-box">
-        <h3>🍱 消費分類佔比</h3>
-        <canvas id="catChart"></canvas>
-    </div>
+    <div class="chart-box"><h3>👤 成員支出排名</h3><canvas id="userChart"></canvas></div>
+    <div class="chart-box"><h3>🍱 消費分類佔比</h3><canvas id="catChart"></canvas></div>
 </div>
 
 <script>
@@ -64,64 +43,27 @@
 
     async function fetchData() {
         if(localStorage.getItem('isLoggedIn') !== 'true') return location.href='index.html';
-
         try {
             const resp = await fetch(GAS_URL + "?type=history");
             const data = await resp.json();
-            processData(data);
-        } catch(e) {
-            document.getElementById('loading-ui').innerText = "讀取失敗，請確認試算表已有資料";
-        }
-    }
-
-    function processData(rows) {
-        let total = 0;
-        let userStats = {};
-        let catStats = {};
-
-        rows.forEach(row => {
-            const amt = parseFloat(row.日幣金額) || 0;
-            total += amt;
-
-            // 統計成員
-            const user = row.記錄人 || "未知";
-            userStats[user] = (userStats[user] || 0) + amt;
-
-            // 統計分類
-            const cat = row.類別 || "雜";
-            catStats[cat] = (catStats[cat] || 0) + amt;
-        });
-
-        // 更新文字
-        document.getElementById('sumJPY').innerText = `¥ ${total.toLocaleString()}`;
-        document.getElementById('sumTWD').innerText = `約台幣 $${Math.round(total * 0.215).toLocaleString()} 元`;
-
-        // 顯示介面
-        document.getElementById('loading-ui').style.display = 'none';
-        document.getElementById('main-ui').style.display = 'block';
-
-        renderChart('userChart', userStats, ['#76c7ff', '#ffcb05', '#ff9f40', '#4bc0c0', '#9966ff']);
-        renderChart('catChart', catStats, ['#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0', '#f1f1f1']);
+            let total = 0, users = {}, cats = {};
+            data.forEach(row => {
+                const amt = parseFloat(row.日幣金額) || 0; total += amt;
+                users[row.記錄人] = (users[row.記錄人] || 0) + amt;
+                cats[row.類別] = (cats[row.類別] || 0) + amt;
+            });
+            document.getElementById('sumJPY').innerText = `¥ ${total.toLocaleString()}`;
+            document.getElementById('sumTWD').innerText = `約台幣 $${Math.round(total * 0.215).toLocaleString()} 元`;
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('main-ui').style.display = 'block';
+            renderChart('userChart', users, ['#76c7ff','#ffcb05','#ff9f40','#4bc0c0','#9966ff']);
+            renderChart('catChart', cats, ['#ff6384','#36a2eb','#cc65fe','#ffce56','#4bc0c0','#f1f1f1']);
+        } catch(e) { document.getElementById('loading').innerText = "讀取失敗"; }
     }
 
     function renderChart(id, stats, colors) {
-        new Chart(document.getElementById(id), {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(stats),
-                datasets: [{
-                    data: Object.values(stats),
-                    backgroundColor: colors,
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                cutout: '70%',
-                plugins: { legend: { position: 'bottom' } }
-            }
-        });
+        new Chart(document.getElementById(id), { type: 'doughnut', data: { labels: Object.keys(stats), datasets: [{ data: Object.values(stats), backgroundColor: colors, borderWidth: 0 }] }, options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } } });
     }
-
     fetchData();
 </script>
 </body>
