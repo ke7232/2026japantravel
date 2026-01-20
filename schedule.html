@@ -14,10 +14,9 @@
         header { background: white; padding: 15px 20px; display: flex; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
         .back-btn { margin-right: 15px; cursor: pointer; }
         
-        /* 彩色日期導覽 */
         .date-selector { display: flex; overflow-x: auto; padding: 15px; gap: 12px; background: white; border-bottom: 1px solid #eee; scrollbar-width: none; }
         .date-selector::-webkit-scrollbar { display: none; }
-        .date-box { min-width: 80px; padding: 12px 5px; background: #fff; border: 2px solid #f0f0f0; border-radius: 20px; text-align: center; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: 0.3s; }
+        .date-box { min-width: 80px; padding: 12px 5px; background: #fff; border: 2px solid #f0f0f0; border-radius: 20px; text-align: center; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: 0.3s; cursor: pointer;}
         .date-box.active { border-width: 2px; }
         .date-box.active[data-day="1"] { border-color: var(--day1); box-shadow: 0 4px 10px rgba(162,210,255,0.5); }
         .date-box.active[data-day="2"] { border-color: var(--day2); box-shadow: 0 4px 10px rgba(116,185,255,0.5); }
@@ -26,7 +25,6 @@
         .date-box.active[data-day="5"] { border-color: var(--day5); box-shadow: 0 4px 10px rgba(250,177,160,0.5); }
         .date-box.active[data-day="6"] { border-color: var(--day6); box-shadow: 0 4px 10px rgba(253,203,110,0.5); }
 
-        /* 進度條樣式 */
         #loading-container { padding: 40px 20px; text-align: center; }
         .progress-bar { width: 100%; max-width: 200px; height: 8px; background: #eee; border-radius: 10px; margin: 15px auto; overflow: hidden; position: relative; }
         .progress-inner { width: 40%; height: 100%; background: var(--primary); border-radius: 10px; position: absolute; animation: loading-move 1.5s infinite ease-in-out; }
@@ -35,7 +33,8 @@
         .timeline { padding: 10px 20px; }
         .card { background: white; border-radius: 22px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); position: relative; border-left: 6px solid var(--primary); }
         .time-label { font-size: 13px; font-weight: 800; color: var(--primary); margin-bottom: 6px; }
-        .delete-btn { position: absolute; top: 18px; right: 18px; color: #eee; cursor: pointer; font-size: 18px; }
+        .delete-btn { position: absolute; top: 18px; right: 18px; color: #eee; cursor: pointer; font-size: 18px; transition: 0.2s; }
+        .delete-btn:hover { color: var(--danger); }
         h4 { margin: 0 0 10px; font-size: 18px; padding-right: 35px; color: #2d3436; font-weight: 700; }
         .card-content { font-size: 14px; color: #636e72; white-space: pre-wrap; line-height: 1.6; }
 
@@ -63,7 +62,6 @@
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxktADedYUP_K5X8S0aJ-f0XKGjev2qOuNZi1LNN7E5vq1b26KA-71Oc1IZnR1drgYfdg/exec";
     let allData = [];
     let currentActiveDate = "";
-    let pendingDelete = null;
     
     const TRIP_DATES = [
         { d: "2026/03/01", label: "3/1(日)", icon: "❄️" }, { d: "2026/03/02", label: "3/2(一)", icon: "❄️" },
@@ -74,23 +72,33 @@
     async function fetchSchedule() {
         try {
             const resp = await fetch(GAS_URL + "?type=schedule");
-            allData = await resp.json();
+            const rawData = await resp.json();
             
-            // 重要排序修正：將時間轉為分鐘數進行數字排序，解決 3:30 排在 9:00 之後的問題
-            allData.sort((a, b) => {
-                const getTimeValue = (t) => {
-                    const [h, m] = t.split(':').map(Number);
-                    return h * 60 + m;
+            // 排序邏輯 + 防錯處理
+            allData = rawData.sort((a, b) => {
+                const parseTime = (t) => {
+                    // 如果欄位空白或格式不符，回傳極大值排到最後
+                    if (!t || typeof t !== 'string' || !t.includes(':')) return 9999;
+                    const parts = t.split(':');
+                    const h = parseInt(parts[0], 10);
+                    const m = parseInt(parts[1], 10);
+                    return isNaN(h) || isNaN(m) ? 9999 : h * 60 + m;
                 };
-                return getTimeValue(a.時間) - getTimeValue(b.時間);
+                return parseTime(a.時間) - parseTime(b.時間);
             });
 
             document.getElementById('loading-container').style.display = 'none';
             renderDates();
-            const todayStr = `${new Date().getFullYear()}/${String(new Date().getMonth()+1).padStart(2,'0')}/${String(new Date().getDate()).padStart(2,'0')}`;
-            const hasToday = TRIP_DATES.find(item => item.d === todayStr);
-            showDay(hasToday ? todayStr : TRIP_DATES[0].d);
-        } catch(e) { document.getElementById('loading-container').innerHTML = "❌ 連線失敗"; }
+            
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
+            const exists = TRIP_DATES.find(item => item.d === todayStr);
+            showDay(exists ? todayStr : TRIP_DATES[0].d);
+            
+        } catch(e) { 
+            console.error("Fetch Error:", e);
+            document.getElementById('loading-container').innerHTML = "❌ 資料讀取失敗，請確認網路或 Sheet 內容是否正確。"; 
+        }
     }
 
     function renderDates() {
@@ -105,25 +113,31 @@
     function showDay(targetDate, el) {
         currentActiveDate = targetDate;
         document.querySelectorAll('.date-box').forEach(b => b.classList.remove('active'));
-        const activeBtn = el || document.getElementById(`btn-${targetDate.replace(/\//g,'')}`);
-        if(activeBtn) { activeBtn.classList.add('active'); activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center' }); }
+        const btnId = `btn-${targetDate.replace(/\//g,'')}`;
+        const activeBtn = el || document.getElementById(btnId);
+        if(activeBtn) { 
+            activeBtn.classList.add('active'); 
+            activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); 
+        }
         
         const container = document.getElementById('scheduleContainer');
-        const filtered = allData.filter(d => d.日期.replace(/-/g, '/') === targetDate);
+        // 過濾機制加入防錯：排除無日期的損壞資料列
+        const filtered = allData.filter(d => {
+            if (!d.日期) return false; 
+            return d.日期.toString().replace(/-/g, '/') === targetDate;
+        });
+        
         container.innerHTML = filtered.length ? filtered.map(item => `
             <div class="card">
                 <div class="delete-btn" onclick="openDelModal('${item.日期}', '${item.時間}', '${item.標題}')">🗑️</div>
-                <div class="time-label">🕙 ${item.時間}</div>
-                <h4>${item.標題}</h4>
-                <div class="card-content">${item.內容}</div>
+                <div class="time-label">🕙 ${item.時間 || 'N/A'}</div>
+                <h4>${item.標題 || '(無標題行程)'}</h4>
+                <div class="card-content">${item.內容 || '(無詳細備註)'}</div>
             </div>`).join('') : '<div style="text-align:center; color:#ccc; margin-top:50px;">本日尚無行程 ✨</div>';
     }
 
-    // Modal 控制與送出邏輯請沿用前一版本...
-    function openAddModal() { /* ... */ }
-    function submitAdd() { /* ... */ }
-    function confirmDelete() { /* ... */ }
+    // Modal 與其他邏輯省略...
+    fetchSchedule();
 </script>
-
 </body>
 </html>
