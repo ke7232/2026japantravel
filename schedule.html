@@ -38,7 +38,6 @@
         .action-btn { cursor: pointer; font-size: 18px; opacity: 0.25; transition: 0.2s; }
         .action-btn:hover { opacity: 1; }
 
-        /* 導航按鈕樣式 */
         .map-link { 
             display: inline-flex; align-items: center; gap: 5px; 
             margin-top: 10px; padding: 6px 12px; background: #e8f5e9; 
@@ -55,7 +54,6 @@
         .modal-label { font-size: 12px; color: #bbb; margin: 10px 0 5px 5px; display: block; }
         .modal input, .modal select, .modal textarea { width: 100%; padding: 12px; border: 2px solid var(--soft); border-radius: 15px; box-sizing: border-box; font-size: 16px; outline: none; background: #fafafa; }
         
-        /* 時間分欄 */
         .time-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
         .modal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 25px; }
@@ -85,19 +83,15 @@
     <div class="modal">
         <h2 id="modalTitle">新增行程 📝</h2>
         <input type="hidden" id="oldDataKey">
-        
         <span class="modal-label">行程名稱</span>
         <input type="text" id="formTitle" placeholder="例如：飯店 Check-in">
-        
         <span class="modal-label">預計時間</span>
         <div class="time-row">
             <select id="formHour"></select>
             <select id="formMin"></select>
         </div>
-        
         <span class="modal-label">詳細內容</span>
         <textarea id="formContent" rows="3" placeholder="交通、備註..."></textarea>
-        
         <div class="modal-btns">
             <button class="modal-btn btn-cancel" onclick="closeModals()">取消</button>
             <button class="modal-btn btn-confirm" onclick="submitForm()">確定</button>
@@ -117,10 +111,11 @@
         { d: "2026/03/05", label: "3/5(四)", icon: "🛍️" }, { d: "2026/03/06", label: "3/6(五)", icon: "✈️" }
     ];
 
-    // 初始化時/分選擇器
     function initTimeOptions() {
         const hourSel = document.getElementById('formHour');
         const minSel = document.getElementById('formMin');
+        hourSel.innerHTML = '';
+        minSel.innerHTML = '';
         for(let h=0; h<24; h++) {
             let val = String(h).padStart(2,'0');
             hourSel.add(new Option(val + ' 時', val));
@@ -134,7 +129,6 @@
         try {
             const resp = await fetch(GAS_URL + "?type=schedule");
             const rawData = await resp.json();
-            
             allData = rawData.sort((a, b) => {
                 const getMins = (t) => {
                     if(!t || !t.includes(':')) return 9999;
@@ -143,15 +137,12 @@
                 };
                 return getMins(a.時間) - getMins(b.時間);
             });
-
             document.getElementById('loading-container').style.display = 'none';
             renderDates();
-            
             const now = new Date();
             const todayStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
             const exists = TRIP_DATES.find(item => item.d === todayStr);
             showDay(currentActiveDate || (exists ? todayStr : TRIP_DATES[0].d));
-            
         } catch(e) { document.getElementById('loading-container').innerHTML = "❌ 讀取失敗"; }
     }
 
@@ -173,7 +164,7 @@
         const filtered = allData.filter(d => d.日期 && d.日期.toString().replace(/-/g, '/') === targetDate);
         
         container.innerHTML = filtered.length ? filtered.map(item => {
-            // 處理 Google Map 關鍵字 (過濾掉 Emoji)
+            // 修復點：正確過濾標題並生成導航連結
             const cleanTitle = item.標題.replace(/[\u1000-\uFFFF]|[^\w\s\u4e00-\u9fa5]/g, '').trim();
             const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cleanTitle)}`;
 
@@ -207,8 +198,8 @@
         document.getElementById('formContent').value = content;
         if(time && time.includes(':')) {
             const [h, m] = time.split(':');
-            document.getElementById('formHour').value = h;
-            document.getElementById('formMin').value = m;
+            document.getElementById('formHour').value = h.padStart(2, '0');
+            document.getElementById('formMin').value = m.padStart(2, '0');
         }
         document.getElementById('oldDataKey').value = JSON.stringify({oldTime: time, oldTitle: title});
         document.getElementById('modal-overlay').style.display = 'flex';
@@ -222,21 +213,17 @@
         const min = document.getElementById('formMin').value;
         const time = `${hour}:${min}`;
         const content = document.getElementById('formContent').value;
-        
         if(!title) return alert("請輸入標題");
-
         const payload = {
             action: isEditMode ? "edit" : "add",
             date: currentActiveDate,
             time: time, title: title, content: content
         };
-
         if(isEditMode) {
             const old = JSON.parse(document.getElementById('oldDataKey').value);
             payload.oldTime = old.oldTime;
             payload.oldTitle = old.oldTitle;
         }
-
         sendRequest(payload);
     }
 
