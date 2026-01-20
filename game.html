@@ -3,47 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>日本行遊戲挑戰 - 2026</title>
+    <title>全家遊戲挑戰榜</title>
     <style>
-        :root { --primary: #76c7ff; --bg: #f7f9fc; --accent: #ffcb05; }
+        :root { --primary: #76c7ff; --bg: #f7f9fc; --accent: #ffcb05; --success: #55efc4; }
         body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; text-align: center; }
         header { background: white; padding: 15px 20px; display: flex; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .back-btn { margin-right: 15px; cursor: pointer; }
         
-        /* 使用者選擇介面 */
-        #user-selector { 
-            position: fixed; inset: 0; background: white; z-index: 5000; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
-        }
+        #user-selector { position: fixed; inset: 0; background: white; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .user-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 30px; }
-        .user-btn { 
-            width: 80px; height: 80px; border-radius: 50%; border: 3px solid #eee;
-            background: white; font-size: 20px; font-weight: bold; cursor: pointer;
-            transition: 0.2s; display: flex; align-items: center; justify-content: center;
-        }
-        .user-btn:active { transform: scale(0.9); border-color: var(--primary); color: var(--primary); }
+        .user-btn { width: 75px; height: 75px; border-radius: 50%; border: 3px solid #eee; background: white; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .user-btn:active { transform: scale(0.9); border-color: var(--primary); }
 
-        /* 遊戲區域 */
         .game-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; background: #fff; margin-bottom: 10px; }
-        .player-info { font-weight: bold; color: var(--primary); }
         
         .game-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 10px; max-width: 400px; margin: auto; }
         .card { aspect-ratio: 1/1; perspective: 1000px; cursor: pointer; }
-        .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.5s; transform-style: preserve-3d; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-radius: 12px; }
+        .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.4s; transform-style: preserve-3d; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-radius: 12px; }
         .card.flipped .card-inner { transform: rotateY(180deg); }
         .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
-        .card-front { background: #fff; color: #ddd; }
+        .card-front { background: #fff; color: #eee; }
         .card-back { background: #fff; transform: rotateY(180deg); }
-        .card.matched .card-inner { border: 3px solid #55efc4; opacity: 0.6; }
+        
+        /* 打勾成功動畫 */
+        .card.matched .card-back { background: #e8fff9; color: var(--success); }
+        .card.matched .card-back::after { content: "✅"; position: absolute; font-size: 20px; bottom: 5px; right: 5px; }
 
-        /* 排行榜 */
-        #leaderboard { margin-top: 20px; padding: 20px; background: white; border-radius: 20px; width: 80%; margin-inline: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
-        .rank-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f9f9f9; font-size: 14px; }
-        .rank-name { font-weight: bold; }
-        .rank-score { color: #888; }
+        /* 生動排行榜 */
+        #leaderboard { margin: 20px auto; padding: 20px; background: white; border-radius: 25px; width: 85%; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        .rank-item { display: flex; align-items: center; padding: 12px 10px; border-bottom: 1px solid #fcfcfc; }
+        .rank-num { width: 30px; font-weight: bold; font-style: italic; color: #ccc; }
+        .rank-name { flex: 1; text-align: left; font-weight: bold; margin-left: 10px; }
+        .rank-score { font-family: monospace; background: #f0f4f8; padding: 2px 10px; border-radius: 10px; color: var(--primary); }
+        
+        .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.8); z-index: 6000; align-items: center; justify-content: center; font-weight: bold; }
     </style>
 </head>
 <body>
+
+<div id="loading" class="loading-overlay">⏳ 同步雲端成績中...</div>
 
 <div id="user-selector">
     <h2>🏆 誰要挑戰？</h2>
@@ -60,111 +58,104 @@
 
 <header>
     <div class="back-btn" onclick="location.href='index.html'"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#76c7ff" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
-    <b style="font-size: 18px;">🎮 記憶大考驗</b>
+    <b style="font-size: 18px;">🎮 全家大對抗</b>
 </header>
 
 <div class="game-header">
-    <div class="player-info">玩家: <span id="current-player">---</span></div>
-    <div>⏱️ <span id="timer">0</span>s</div>
+    <div style="font-weight:bold;">玩家: <span id="current-player" style="color:var(--primary);">---</span></div>
+    <div style="font-weight:bold;">⏱️ <span id="timer">0</span>s</div>
 </div>
 
 <div class="game-grid" id="grid"></div>
 
 <div id="leaderboard">
-    <h3 style="font-size: 15px; color: #aaa;">🎖️ 家族榮譽榜 (最短秒數)</h3>
-    <div id="rank-list"></div>
+    <h3 style="font-size: 16px; color: var(--primary); margin-top: 0;">👑 家族英雄榜 (最短用時)</h3>
+    <div id="rank-list"><p style="color:#ccc">載入中...</p></div>
 </div>
 
-<button onclick="location.reload()" style="margin: 20px; padding: 12px 30px; border-radius: 20px; border: none; background: #eee; color: #888; font-weight: bold;">換人玩 🔄</button>
+<button onclick="location.reload()" style="margin-bottom: 30px; padding: 12px 40px; border-radius: 25px; border: none; background: var(--primary); color: white; font-weight: bold; box-shadow: 0 4px 15px rgba(118,199,255,0.3);">換人玩 / 重新開始 🔄</button>
 
 <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxktADedYUP_K5X8S0aJ-f0XKGjev2qOuNZi1LNN7E5vq1b26KA-71Oc1IZnR1drgYfdg/exec";
     const emojis = ['🎿', '❄️', '⛄', '🍣', '🗼', '🛍️', '🍜', '🚃'];
-    let currentPlayer = "";
-    let cards = [...emojis, ...emojis];
-    let flippedCards = [];
-    let matchedPairs = 0;
-    let seconds = 0;
-    let timerInterval;
+    let currentPlayer = "", flippedCards = [], matchedPairs = 0, seconds = 0, timerInterval;
 
-    // 啟動遊戲
     function startGame(name) {
         currentPlayer = name;
         document.getElementById('current-player').innerText = name;
         document.getElementById('user-selector').style.display = 'none';
         initGrid();
-        startTimer();
-        updateLeaderboard();
+        timerInterval = setInterval(() => { seconds++; document.getElementById('timer').innerText = seconds; }, 1000);
     }
 
     function initGrid() {
         const grid = document.getElementById('grid');
         grid.innerHTML = '';
-        cards.sort(() => Math.random() - 0.5);
+        const cards = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
         cards.forEach(emoji => {
             const el = document.createElement('div');
             el.className = 'card';
             el.dataset.emoji = emoji;
             el.innerHTML = `<div class="card-inner"><div class="card-front">?</div><div class="card-back">${emoji}</div></div>`;
-            el.onclick = () => flip(el);
+            el.onclick = () => {
+                if (flippedCards.length === 2 || el.classList.contains('flipped') || el.classList.contains('matched')) return;
+                el.classList.add('flipped');
+                flippedCards.push(el);
+                if (flippedCards.length === 2) checkMatch();
+            };
             grid.appendChild(el);
         });
     }
 
-    function flip(el) {
-        if (flippedCards.length === 2 || el.classList.contains('flipped') || el.classList.contains('matched')) return;
-        el.classList.add('flipped');
-        flippedCards.push(el);
-        if (flippedCards.length === 2) check();
-    }
-
-    function check() {
+    function checkMatch() {
         const [c1, c2] = flippedCards;
         if (c1.dataset.emoji === c2.dataset.emoji) {
             c1.classList.add('matched'); c2.classList.add('matched');
-            matchedPairs++;
-            flippedCards = [];
+            matchedPairs++; flippedCards = [];
             if (matchedPairs === emojis.length) win();
         } else {
             setTimeout(() => { c1.classList.remove('flipped'); c2.classList.remove('flipped'); flippedCards = []; }, 800);
         }
     }
 
-    function startTimer() {
-        timerInterval = setInterval(() => { seconds++; document.getElementById('timer').innerText = seconds; }, 1000);
-    }
-
-    function win() {
+    async function win() {
         clearInterval(timerInterval);
-        saveScore(currentPlayer, seconds);
+        document.getElementById('loading').style.display = 'flex';
+        // 送出成績到 Sheet
+        await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "gameScore", player: currentPlayer, score: seconds }) });
+        
         setTimeout(() => {
-            alert(`🎉 ${currentPlayer} 挑戰成功！\n耗時：${seconds} 秒`);
-            updateLeaderboard();
-        }, 500);
+            alert(`🏆 ${currentPlayer} 完成！\n耗時：${seconds} 秒`);
+            location.reload(); // 重新載入以抓取最新排行榜
+        }, 1000);
     }
 
-    // 排行榜邏輯 (使用 localStorage 存儲於手機本地)
-    function saveScore(name, score) {
-        let scores = JSON.parse(localStorage.getItem('gameScores') || '{}');
-        // 如果這個人還沒玩過，或者這次成績更好，則更新
-        if (!scores[name] || score < scores[name]) {
-            scores[name] = score;
-            localStorage.setItem('gameScores', JSON.stringify(scores));
-        }
+    async function updateLeaderboard() {
+        try {
+            const resp = await fetch(GAS_URL + "?type=game");
+            const rawData = await resp.json();
+            
+            // 處理邏輯：找出每個人的最高紀錄
+            let bestScores = {};
+            rawData.forEach(row => {
+                let name = row[1], score = parseInt(row[2]);
+                if (!bestScores[name] || score < bestScores[name]) bestScores[name] = score;
+            });
+
+            let sorted = Object.entries(bestScores).sort((a, b) => a[1] - b[1]);
+            const medals = ['🥇', '🥈', '🥉'];
+            
+            document.getElementById('rank-list').innerHTML = sorted.map(([name, time], i) => `
+                <div class="rank-item">
+                    <span class="rank-num">${medals[i] || (i+1)}</span>
+                    <span class="rank-name">${name}</span>
+                    <span class="rank-score">${time}s</span>
+                </div>
+            `).join('') || '<div style="color:#eee">尚未有全球成績</div>';
+        } catch(e) { document.getElementById('rank-list').innerHTML = "排行榜載入失敗"; }
     }
 
-    function updateLeaderboard() {
-        let scores = JSON.parse(localStorage.getItem('gameScores') || '{}');
-        let sorted = Object.entries(scores).sort((a, b) => a[1] - b[1]);
-        const list = document.getElementById('rank-list');
-        list.innerHTML = sorted.map(([name, time], index) => `
-            <div class="rank-item">
-                <span class="rank-name">${index + 1}. ${name}</span>
-                <span class="rank-score">${time}s</span>
-            </div>
-        `).join('') || '<div style="color:#eee">尚無紀錄</div>';
-    }
-
-    updateLeaderboard();
+    window.onload = updateLeaderboard;
 </script>
 </body>
 </html>
