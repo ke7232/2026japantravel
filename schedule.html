@@ -70,7 +70,7 @@
 
 <header>
     <div class="back-btn" onclick="location.href='index.html'"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#76c7ff" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
-    <b style="font-size: 19px; letter-spacing: 1px;">📅 每日行程</b>
+    <b style="font-size: 18px;">📅 每日行程</b>
 </header>
 
 <div class="date-selector" id="dateSelector"></div>
@@ -83,11 +83,11 @@
     <div class="modal">
         <h2 id="modalTitle">新增行程 📝</h2>
         <span style="font-size:13px; color:#888; margin-left:10px;">行程標題</span>
-        <input type="text" id="addTitle" style="width:100%; padding:12px; border:2px solid #e3f2fd; border-radius:15px; margin-bottom:10px;" placeholder="例如：築地市場吃壽司">
+        <input type="text" id="addTitle" style="width:100%; padding:12px; border:2px solid #e3f2fd; border-radius:15px; margin-bottom:10px; box-sizing:border-box;" placeholder="例如：輕井澤滑雪">
         <span style="font-size:13px; color:#888; margin-left:10px;">時間 (10:00)</span>
-        <select id="addTime" style="width:100%; padding:12px; border:2px solid #e3f2fd; border-radius:15px; margin-bottom:10px;"></select>
+        <select id="addTime" style="width:100%; padding:12px; border:2px solid #e3f2fd; border-radius:15px; margin-bottom:10px; box-sizing:border-box;"></select>
         <span style="font-size:13px; color:#888; margin-left:10px;">詳細內容</span>
-        <textarea id="addContent" rows="3" style="width:100%; padding:12px; border:2px solid #e3f2fd; border-radius:15px; margin-bottom:10px;" placeholder="備註、交通方式..."></textarea>
+        <textarea id="addContent" rows="3" style="width:100%; padding:12px; border:2px solid #e3f2fd; border-radius:15px; margin-bottom:10px; box-sizing:border-box;" placeholder="備註、交通方式..."></textarea>
         <div class="modal-btns">
             <button class="modal-btn btn-cancel" onclick="closeModals()">取消</button>
             <button class="modal-btn btn-confirm" onclick="submitAdd()">確定新增</button>
@@ -100,7 +100,7 @@
         <h2 style="color:var(--danger)">刪除行程？ 🗑️</h2>
         <p id="delInfo" style="text-align:center; font-size:14px; color:#666;"></p>
         <span style="font-size:13px; color:#888; margin-left:10px;">輸入管理密碼</span>
-        <input type="password" id="delPass" style="width:100%; padding:12px; border:2px solid #e3f2fd; border-radius:15px;" placeholder="請輸入 9453">
+        <input type="password" id="delPass" style="width:100%; padding:12px; border:2px solid #e3f2fd; border-radius:15px; box-sizing:border-box;" placeholder="請輸入 9453">
         <div class="modal-btns">
             <button class="modal-btn btn-cancel" onclick="closeModals()">取消</button>
             <button class="modal-btn btn-danger" onclick="confirmDelete()">確定刪除</button>
@@ -114,14 +114,13 @@
     let currentActiveDate = "";
     let pendingDelete = null;
     
-    // 主題圖示設定：前三天雪季，後三天東京市區
     const TRIP_DATES = [
         { d: "2026/03/01", label: "3/1(日)", icon: "❄️" }, 
         { d: "2026/03/02", label: "3/2(一)", icon: "❄️" },
         { d: "2026/03/03", label: "3/3(二)", icon: "❄️" },
-        { d: "2026/03/04", label: "3/4(三)", icon: "🍣" }, // 美食
-        { d: "2026/03/05", label: "3/5(四)", icon: "🛍️" }, // 購物
-        { d: "2026/03/06", label: "3/6(五)", icon: "✈️" }  // 飛機
+        { d: "2026/03/04", label: "3/4(三)", icon: "🍣" }, 
+        { d: "2026/03/05", label: "3/5(四)", icon: "🛍️" }, 
+        { d: "2026/03/06", label: "3/6(五)", icon: "✈️" } 
     ];
 
     function initTimeOptions() {
@@ -143,6 +142,8 @@
             allData.sort((a, b) => a.時間.localeCompare(b.時間));
             document.getElementById('loading').style.display = 'none';
             renderDates();
+            
+            // 自動跳轉今天日期
             const today = new Date();
             const todayStr = `${today.getFullYear()}/${String(today.getMonth()+1).padStart(2,'0')}/${String(today.getDate()).padStart(2,'0')}`;
             const hasToday = TRIP_DATES.find(item => item.d === todayStr);
@@ -168,7 +169,14 @@
             activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center' });
         }
         const container = document.getElementById('scheduleContainer');
-        const filtered = allData.filter(d => d.日期 === targetDate);
+        
+        // 強化日期過濾比對
+        const filtered = allData.filter(d => {
+            let rowDate = d.日期;
+            if (rowDate.includes('T')) rowDate = rowDate.split('T')[0].replace(/-/g, '/');
+            return rowDate === targetDate;
+        });
+
         container.innerHTML = filtered.length ? filtered.map(item => `
             <div class="card">
                 <div class="delete-btn" onclick="openDelModal('${item.日期}', '${item.時間}', '${item.標題}')">🗑️</div>
