@@ -2,117 +2,153 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日本行計帳</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>家。日本行計帳</title>
     <style>
-        body { font-family: -apple-system, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        h2 { text-align: center; color: #333; margin-bottom: 20px; }
+        :root { --primary: #5da9e9; --bg: #f8f9fa; --text: #333; }
+        body { font-family: -apple-system, "Noto Sans TC", sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; }
         
-        /* 分類按鈕樣式 */
-        .category-group { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 20px; }
-        .cat-btn { border: 2px solid #eee; background: white; padding: 10px 5px; border-radius: 8px; cursor: pointer; font-size: 14px; text-align: center; transition: 0.3s; }
-        .cat-btn.active { border-color: #007bff; background-color: #e7f3ff; color: #007bff; font-weight: bold; }
+        .app-container { width: 100%; max-width: 500px; background: white; min-height: 100vh; position: relative; padding-bottom: 40px; }
+        
+        /* Header & Menu */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid #eee; }
+        .logo { font-size: 20px; font-weight: bold; }
+        .menu-btn { font-size: 24px; cursor: pointer; padding: 5px; }
+        .menu-dropdown { display: none; position: absolute; top: 60px; right: 20px; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px; z-index: 100; overflow: hidden; }
+        .menu-dropdown.show { display: block; }
+        .menu-item { padding: 15px 25px; border-bottom: 1px solid #eee; font-size: 16px; cursor: pointer; }
+        .menu-item:last-child { border: none; }
 
-        input { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        .submit-btn { width: 100%; padding: 15px; background-color: #007bff; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .submit-btn:disabled { background-color: #ccc; }
-        #status { text-align: center; margin-top: 15px; font-weight: bold; }
+        .content { padding: 20px; }
+        h3 { margin-bottom: 10px; font-size: 16px; color: #666; font-weight: normal; }
+
+        /* Button Groups */
+        .btn-group { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 25px; }
+        .selection-btn { border: 2px solid #f0f0f0; background: #fff; padding: 12px 5px; border-radius: 12px; font-size: 14px; text-align: center; transition: 0.2s; cursor: pointer; }
+        .selection-btn.active { border-color: var(--primary); background-color: #eef7ff; color: var(--primary); font-weight: bold; }
+
+        /* Inputs */
+        .input-box { width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; font-size: 18px; background: #fafafa; }
+        .twd-hint { font-size: 14px; color: #888; margin-top: -10px; margin-bottom: 15px; padding-left: 5px; }
+
+        .submit-btn { width: 100%; padding: 16px; background-color: var(--primary); color: white; border: none; border-radius: 15px; font-size: 18px; font-weight: bold; box-shadow: 0 4px 10px rgba(93,169,233,0.3); }
+        .submit-btn:active { transform: scale(0.98); }
         
-        #main-content, #login-form { display: none; }
-        #login-form.active, #main-content.active { display: block; }
+        #status { text-align: center; margin-top: 20px; font-weight: bold; }
+
+        /* Login Overlay */
+        #login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:1000; display:flex; flex-direction:column; align-items:center; justify-content:center; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <div id="login-form" class="active">
-        <h2>🇯🇵 家族計帳登入</h2>
-        <input type="password" id="password" placeholder="輸入密碼 (1234)">
-        <button class="submit-btn" onclick="checkPassword()">進入系統</button>
-    </div>
+<div id="login-overlay">
+    <h2>🇯🇵 家族專屬計帳</h2>
+    <input type="password" id="passInput" class="input-box" style="width: 80%" placeholder="密碼 (1234)">
+    <button class="submit-btn" style="width: 80%" onclick="login()">登入</button>
+</div>
 
-    <div id="main-content">
-        <h2>新增日幣開銷</h2>
-        
-        <p style="margin-bottom: 8px; font-size: 14px; color: #666;">1. 選擇分類</p>
-        <div class="category-group">
-            <div class="cat-btn active" onclick="selectCat(this, '食')">食</div>
-            <div class="cat-btn" onclick="selectCat(this, '行')">行</div>
-            <div class="cat-btn" onclick="selectCat(this, '購物')">購物</div>
-            <div class="cat-btn" onclick="selectCat(this, '景點')">景點</div>
-            <div class="cat-btn" onclick="selectCat(this, '雜')">雜</div>
+<div class="app-container">
+    <header>
+        <div class="logo">🇯🇵 日本行計帳</div>
+        <div class="menu-btn" onclick="toggleMenu()">☰</div>
+        <div id="menu" class="menu-dropdown">
+            <div class="menu-item" onclick="alert('行程功能建設中！')">📅 每日行程</div>
+            <div class="menu-item" onclick="alert('總覽功能建設中！')">📊 記帳總覽</div>
+            <div class="menu-item" onclick="alert('留言板功能建設中！')">💬 留言板</div>
+        </div>
+    </header>
+
+    <div class="content">
+        <h3>1. 選擇分類</h3>
+        <div class="btn-group" id="cat-group">
+            <div class="selection-btn active" onclick="selectBtn('cat', this, '食')">食</div>
+            <div class="selection-btn" onclick="selectBtn('cat', this, '行')">行</div>
+            <div class="selection-btn" onclick="selectBtn('cat', this, '購物')">購物</div>
+            <div class="selection-btn" onclick="selectBtn('cat', this, '景點')">景點</div>
+            <div class="selection-btn" onclick="selectBtn('cat', this, '雜')">雜</div>
         </div>
 
-        <p style="margin-bottom: 8px; font-size: 14px; color: #666;">2. 輸入資訊</p>
-        <input type="number" id="amount" placeholder="日幣總額 (例：1500)" inputmode="numeric">
-        <input type="text" id="item" placeholder="品名 (例：一蘭拉麵)">
-        <input type="text" id="user" placeholder="誰付的錢？">
-        
-        <button id="submit-btn" class="submit-btn" onclick="sendData()">送出紀錄</button>
+        <h3>2. 輸入金額與品名</h3>
+        <input type="number" id="amount" class="input-box" placeholder="日幣金額 (JPY)" inputmode="numeric" oninput="calcTWD()">
+        <div id="twd-text" class="twd-hint"></div>
+        <input type="text" id="item" class="input-box" placeholder="品名 (例：晴空塔門票)">
+
+        <h3>3. 誰付的錢？</h3>
+        <div class="btn-group" id="user-group">
+            <div class="selection-btn active" onclick="selectBtn('user', this, '航')">航</div>
+            <div class="selection-btn" onclick="selectBtn('user', this, '安')">安</div>
+            <div class="selection-btn" onclick="selectBtn('user', this, '香')">香</div>
+            <div class="selection-btn" onclick="selectBtn('user', this, '瑩')">瑩</div>
+            <div class="selection-btn" onclick="selectBtn('user', this, '廷')">廷</div>
+        </div>
+
+        <button id="send-btn" class="submit-btn" onclick="submitData()">送出紀錄</button>
         <p id="status"></p>
     </div>
 </div>
 
 <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxktADedYUP_K5X8S0aJ-f0XKGjev2qOuNZi1LNN7E5vq1b26KA-71Oc1IZnR1drgYfdg/exec";
-    let selectedCategory = "食"; // 預設分類
+    // 已經幫你填入你的專屬網址囉！
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxktADedYUP_K5X8S0aJ-f0XKGjev2qOuNZi1LNN7E5vq1b26KA-71Oc1IZnR1drgYfdg/exec"; 
+    
+    let currentCat = "食";
+    let currentUser = "航";
 
-    function checkPassword() {
-        if (document.getElementById('password').value === '1234') {
-            document.getElementById('login-form').classList.remove('active');
-            document.getElementById('main-content').classList.add('active');
-        } else {
-            alert('密碼錯誤');
-        }
+    function login() {
+        if(document.getElementById('passInput').value === '1234') {
+            document.getElementById('login-overlay').style.display = 'none';
+        } else { alert('密碼錯誤！'); }
     }
 
-    function selectCat(btn, cat) {
-        // 切換按鈕高亮
-        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        selectedCategory = cat;
+    function toggleMenu() {
+        document.getElementById('menu').classList.toggle('show');
     }
 
-    function sendData() {
-        const btn = document.getElementById('submit-btn');
+    function selectBtn(type, el, val) {
+        const parentId = type === 'cat' ? 'cat-group' : 'user-group';
+        document.querySelectorAll(`#${parentId} .selection-btn`).forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        if(type === 'cat') currentCat = val;
+        else currentUser = val;
+    }
+
+    function calcTWD() {
+        const jpy = document.getElementById('amount').value;
+        const rate = 0.215; 
+        const twd = Math.round(jpy * rate);
+        document.getElementById('twd-text').innerText = jpy ? `約台幣 $${twd} 元` : "";
+    }
+
+    function submitData() {
+        const btn = document.getElementById('send-btn');
         const status = document.getElementById('status');
         const amount = document.getElementById('amount').value;
         const item = document.getElementById('item').value;
-        const user = document.getElementById('user').value;
 
-        if (!amount || !item) {
-            alert("請填寫金額與品名");
-            return;
-        }
+        if(!amount || !item) { alert('請填寫完整資訊'); return; }
 
         btn.disabled = true;
-        status.innerText = "正在儲存...";
-        status.style.color = "#666";
-
-        const data = {
-            category: selectedCategory,
-            amount: amount,
-            item: item,
-            user: user
-        };
-
+        status.innerText = "傳送中...";
+        
         fetch(GAS_URL, {
             method: "POST",
             mode: "no-cors",
-            body: JSON.stringify(data)
-        })
-        .then(() => {
+            body: JSON.stringify({
+                category: currentCat,
+                amount: amount,
+                item: item,
+                user: currentUser
+            })
+        }).then(() => {
             status.innerText = "✅ 成功存入 Google Sheets！";
             status.style.color = "green";
-            // 清空輸入框
             document.getElementById('amount').value = "";
             document.getElementById('item').value = "";
+            document.getElementById('twd-text').innerText = "";
             btn.disabled = false;
-        })
-        .catch(err => {
-            status.innerText = "❌ 發生錯誤";
-            status.style.color = "red";
+        }).catch(() => {
+            status.innerText = "❌ 失敗，請檢查網路";
             btn.disabled = false;
         });
     }
