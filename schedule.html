@@ -6,7 +6,7 @@
     <title>每日行程</title>
     <style>
         :root { 
-            --primary: #76c7ff; --bg: #f7f9fc; --danger: #ff5e5e; --soft: #e3f2fd; --edit: #a29bfe;
+            --primary: #76c7ff; --bg: #f7f9fc; --danger: #ff5e5e; --soft: #e3f2fd;
             --day1: #a2d2ff; --day2: #74b9ff; --day3: #81ecec; 
             --day4: #ff7675; --day5: #fab1a0; --day6: #fdcb6e;
         }
@@ -18,10 +18,12 @@
         .date-selector::-webkit-scrollbar { display: none; }
         .date-box { min-width: 80px; padding: 12px 5px; background: #fff; border: 2px solid #f0f0f0; border-radius: 20px; text-align: center; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: 0.3s; cursor: pointer;}
         .date-box.active { border-width: 2px; }
-        .date-box.active[data-day="1"] { border-color: var(--day1); }
-        .date-box.active[data-day="2"] { border-color: var(--day2); }
-        .date-box.active[data-day="3"] { border-color: var(--day3); }
-        /* ... 其他顏色 ... */
+        .date-box.active[data-day="1"] { border-color: var(--day1); box-shadow: 0 4px 10px rgba(162,210,255,0.5); }
+        .date-box.active[data-day="2"] { border-color: var(--day2); box-shadow: 0 4px 10px rgba(116,185,255,0.5); }
+        .date-box.active[data-day="3"] { border-color: var(--day3); box-shadow: 0 4px 10px rgba(129,236,236,0.5); }
+        .date-box.active[data-day="4"] { border-color: var(--day4); box-shadow: 0 4px 10px rgba(255,118,117,0.5); }
+        .date-box.active[data-day="5"] { border-color: var(--day5); box-shadow: 0 4px 10px rgba(250,177,160,0.5); }
+        .date-box.active[data-day="6"] { border-color: var(--day6); box-shadow: 0 4px 10px rgba(253,203,110,0.5); }
 
         #loading-container { padding: 40px 20px; text-align: center; }
         .progress-bar { width: 100%; max-width: 200px; height: 8px; background: #eee; border-radius: 10px; margin: 15px auto; overflow: hidden; position: relative; }
@@ -32,12 +34,11 @@
         .card { background: white; border-radius: 22px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); position: relative; border-left: 6px solid var(--primary); }
         .time-label { font-size: 13px; font-weight: 800; color: var(--primary); margin-bottom: 6px; }
         
-        /* 按鈕群組 */
         .card-actions { position: absolute; top: 18px; right: 18px; display: flex; gap: 12px; }
-        .action-btn { cursor: pointer; font-size: 18px; opacity: 0.3; transition: 0.2s; }
+        .action-btn { cursor: pointer; font-size: 18px; opacity: 0.25; transition: 0.2s; }
         .action-btn:hover { opacity: 1; }
 
-        h4 { margin: 0 0 10px; font-size: 18px; padding-right: 60px; color: #2d3436; font-weight: 700; }
+        h4 { margin: 0 0 10px; font-size: 18px; padding-right: 65px; color: #2d3436; font-weight: 700; }
         .card-content { font-size: 14px; color: #636e72; white-space: pre-wrap; line-height: 1.6; }
 
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
@@ -61,7 +62,7 @@
 <div class="date-selector" id="dateSelector"></div>
 
 <div id="loading-container">
-    <div style="font-size: 14px; color: #aaa;">✈️ 正在處理中...</div>
+    <div style="font-size: 14px; color: #aaa;">✈️ 正在從雲端同步行程...</div>
     <div class="progress-bar"><div class="progress-inner"></div></div>
 </div>
 
@@ -71,15 +72,16 @@
 <div id="modal-overlay" class="modal-overlay">
     <div class="modal">
         <h2 id="modalTitle">新增行程 📝</h2>
-        <input type="hidden" id="editOldKey"> <span class="modal-label">行程標題</span>
-        <input type="text" id="formTitle" placeholder="例如：築地市場吃早餐">
+        <input type="hidden" id="oldDataKey">
+        <span class="modal-label">行程名稱</span>
+        <input type="text" id="formTitle" placeholder="例如：飯店 Check-in">
         <span class="modal-label">預計時間</span>
         <select id="formTime"></select>
-        <span class="modal-label">備註內容</span>
-        <textarea id="formContent" rows="3" placeholder="交通方式、地點、必吃項目..."></textarea>
+        <span class="modal-label">詳細內容</span>
+        <textarea id="formContent" rows="3" placeholder="交通、備註..."></textarea>
         <div class="modal-btns">
             <button class="modal-btn btn-cancel" onclick="closeModals()">取消</button>
-            <button class="modal-btn btn-confirm" id="submitBtn" onclick="processForm()">確定</button>
+            <button class="modal-btn btn-confirm" onclick="submitForm()">確定</button>
         </div>
     </div>
 </div>
@@ -109,17 +111,31 @@
     async function fetchSchedule() {
         try {
             const resp = await fetch(GAS_URL + "?type=schedule");
-            allData = await resp.json();
-            allData.sort((a,b) => (a.時間||"99:99").localeCompare(b.時間||"99:99"));
+            const rawData = await resp.json();
+            
+            // 排序邏輯：按時間早晚排序
+            allData = rawData.sort((a, b) => {
+                const getMins = (t) => {
+                    if(!t || !t.includes(':')) return 9999;
+                    const [h, m] = t.split(':').map(Number);
+                    return h * 60 + m;
+                };
+                return getMins(a.時間) - getMins(b.時間);
+            });
+
             document.getElementById('loading-container').style.display = 'none';
             renderDates();
-            showDay(currentActiveDate || TRIP_DATES[0].d);
+            
+            const todayStr = `${new Date().getFullYear()}/${String(new Date().getMonth()+1).padStart(2,'0')}/${String(new Date().getDate()).padStart(2,'0')}`;
+            const exists = TRIP_DATES.find(item => item.d === todayStr);
+            showDay(currentActiveDate || (exists ? todayStr : TRIP_DATES[0].d));
+            
         } catch(e) { document.getElementById('loading-container').innerHTML = "❌ 讀取失敗"; }
     }
 
     function renderDates() {
         document.getElementById('dateSelector').innerHTML = TRIP_DATES.map((item, i) => `
-            <div class="date-box" id="btn-${item.d.replace(/\//g,'')}" onclick="showDay('${item.d}', this)">
+            <div class="date-box" id="btn-${item.d.replace(/\//g,'')}" data-day="${i+1}" onclick="showDay('${item.d}', this)">
                 <div style="font-size:24px;">${item.icon}</div>
                 <div style="font-size:12px; font-weight:bold;">${item.label}</div>
             </div>`).join('');
@@ -129,7 +145,7 @@
         currentActiveDate = targetDate;
         document.querySelectorAll('.date-box').forEach(b => b.classList.remove('active'));
         const activeBtn = el || document.getElementById(`btn-${targetDate.replace(/\//g,'')}`);
-        if(activeBtn) activeBtn.classList.add('active');
+        if(activeBtn) { activeBtn.classList.add('active'); activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center' }); }
         
         const container = document.getElementById('scheduleContainer');
         const filtered = allData.filter(d => d.日期 && d.日期.toString().replace(/-/g, '/') === targetDate);
@@ -146,7 +162,6 @@
             </div>`).join('') : '<div style="text-align:center; color:#ccc; margin-top:50px;">本日尚無行程 ✨</div>';
     }
 
-    // Modal 開啟邏輯
     function openAddModal() {
         isEditMode = false;
         document.getElementById('modalTitle').innerText = "新增行程 📝";
@@ -161,15 +176,13 @@
         document.getElementById('formTitle').value = title;
         document.getElementById('formTime').value = time;
         document.getElementById('formContent').value = content;
-        // 紀錄舊的 Key (時間+標題) 用於搜尋比對
-        document.getElementById('editOldKey').value = JSON.stringify({oldTime: time, oldTitle: title});
+        document.getElementById('oldDataKey').value = JSON.stringify({oldTime: time, oldTitle: title});
         document.getElementById('modal-overlay').style.display = 'flex';
     }
 
     function closeModals() { document.getElementById('modal-overlay').style.display = 'none'; }
 
-    // 處理表單送出
-    function processForm() {
+    function submitForm() {
         const title = document.getElementById('formTitle').value;
         const time = document.getElementById('formTime').value;
         const content = document.getElementById('formContent').value;
@@ -178,22 +191,21 @@
         const payload = {
             action: isEditMode ? "edit" : "add",
             date: currentActiveDate,
-            time: time,
-            title: title,
-            content: content
+            time: time, title: title, content: content
         };
 
         if(isEditMode) {
-            const oldData = JSON.parse(document.getElementById('editOldKey').value);
-            payload.oldTime = oldData.oldTime;
-            payload.oldTitle = oldData.oldTitle;
+            const old = JSON.parse(document.getElementById('oldDataKey').value);
+            payload.oldTime = old.oldTime;
+            payload.oldTitle = old.oldTitle;
         }
 
         sendRequest(payload);
     }
 
     function handleDelete(time, title) {
-        if(!confirm(`確定要刪除「${title}」嗎？`)) return;
+        const pass = prompt("管理密碼 (9453)：");
+        if (pass !== "9453") return pass && alert("密碼錯誤");
         sendRequest({ action: "delete", date: currentActiveDate, time, title });
     }
 
