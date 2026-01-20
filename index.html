@@ -9,7 +9,7 @@
         body { font-family: "PingFang TC", sans-serif; background: #f0f8ff; margin: 0; display: flex; justify-content: center; }
         .app-container { width: 100%; max-width: 500px; background: white; min-height: 100vh; position: relative; }
         
-        /* 登入遮罩修正 */
+        /* 登入遮罩：解決點擊失效關鍵 */
         #login-overlay { 
             position: fixed; inset: 0; background: #fff; z-index: 9999; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
@@ -19,8 +19,6 @@
         
         header { display: flex; justify-content: space-between; align-items: center; padding: 25px 20px; background: white; border-bottom: 1px solid #f9f9f9; position: relative; }
         .logo { font-size: 20px; font-weight: bold; }
-        
-        /* 版本號樣式 */
         #version-display { font-size: 10px; color: #ccc; margin-top: 5px; font-weight: normal; }
 
         .menu-wrapper { position: relative; z-index: 1000; }
@@ -55,7 +53,7 @@
     <header>
         <div>
             <div class="logo">2026 王王王日本行</div>
-            <div id="version-display">Loading...</div>
+            <div id="version-display">v0.0.0</div>
         </div>
         <div class="menu-wrapper">
             <div class="menu-icon" id="menuToggle">
@@ -74,7 +72,7 @@
         <div class="cat-group">
             <div class="selection-btn active" onclick="selectCat(this, '食')">🍱 食</div>
             <div class="selection-btn" onclick="selectCat(this, '行')">🚃 行</div>
-            <div class="selection-btn" onclick="购物" onclick="selectCat(this, '購物')">🛍️ 購物</div>
+            <div class="selection-btn" onclick="selectCat(this, '購物')">🛍️ 購物</div>
             <div class="selection-btn" onclick="selectCat(this, '景點')">🗼 景點</div>
             <div class="selection-btn" onclick="selectCat(this, '雜')">🎈 雜</div>
             <div class="selection-btn" onclick="selectCat(this, '住')">🏨 住</div>
@@ -88,100 +86,3 @@
             <div class="user-btn" onclick="selectUser(this, '安')">安</div>
             <div class="user-btn" onclick="selectUser(this, '香')">香</div>
             <div class="user-btn" onclick="selectUser(this, '瑩')">瑩</div>
-            <div class="user-btn" onclick="selectUser(this, '廷')">廷</div>
-        </div>
-        <button id="send-btn" class="submit-btn" style="margin-top: 30px;" onclick="submitData()">完成並存檔 ✨</button>
-        <p id="status" style="text-align: center; margin-top: 15px; font-weight: bold;"></p>
-    </div>
-</div>
-
-<script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxktADedYUP_K5X8S0aJ-f0XKGjev2qOuNZi1LNN7E5vq1b26KA-71Oc1IZnR1drgYfdg/exec"; 
-    let currentCat = "食", currentUser = "航";
-
-    // --- 版本流水號邏輯 ---
-    function updateVersion() {
-        let vStr = localStorage.getItem('appVersion') || "0.0.0";
-        let parts = vStr.split('.').map(Number);
-        
-        // 流水號邏輯：最後一位+1，滿100向前進位
-        parts[2]++;
-        if (parts[2] >= 100) {
-            parts[2] = 0;
-            parts[1]++;
-        }
-        if (parts[1] >= 100) {
-            parts[1] = 0;
-            parts[0]++;
-        }
-        
-        let newVersion = parts.join('.');
-        localStorage.setItem('appVersion', newVersion);
-        document.getElementById('version-display').innerText = "v" + newVersion;
-    }
-
-    // 頁面加載初始化
-    window.addEventListener('DOMContentLoaded', () => {
-        updateVersion(); // 每次刷新/打開就增加流水號
-        
-        if(localStorage.getItem('isLoggedIn') === 'true') {
-            document.getElementById('login-overlay').classList.add('hide');
-        }
-    });
-
-    function handleLogin() {
-        const pass = document.getElementById('passInput').value;
-        if(pass === '1234') {
-            localStorage.setItem('isLoggedIn', 'true');
-            document.getElementById('login-overlay').classList.add('hide');
-        } else {
-            alert('密碼錯誤！');
-        }
-    }
-
-    // 選單控制
-    const menuToggle = document.getElementById('menuToggle');
-    const menu = document.getElementById('menu');
-    menuToggle.onclick = function(e) {
-        e.stopPropagation();
-        menu.classList.toggle('show');
-    };
-    document.onclick = function() {
-        if(menu) menu.classList.remove('show');
-    };
-
-    function selectCat(el, val) {
-        document.querySelectorAll('.cat-group .selection-btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
-        currentCat = val;
-    }
-
-    function selectUser(el, val) {
-        document.querySelectorAll('.user-group .user-btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
-        currentUser = val;
-    }
-
-    function submitData() {
-        const btn = document.getElementById('send-btn');
-        const status = document.getElementById('status');
-        const amount = document.getElementById('amount').value;
-        const item = document.getElementById('item').value;
-        if(!amount || !item) return alert('請填寫完整資訊');
-        btn.disabled = true;
-        status.innerText = "同步中...";
-        fetch(GAS_URL, {
-            method: "POST",
-            mode: "no-cors",
-            body: JSON.stringify({ category: currentCat, amount: amount, item: item, user: currentUser })
-        }).then(() => {
-            status.innerText = "✅ 成功存入雲端！";
-            status.style.color = "#4CAF50";
-            document.getElementById('amount').value = "";
-            document.getElementById('item').value = "";
-            btn.disabled = false;
-        });
-    }
-</script>
-</body>
-</html>
