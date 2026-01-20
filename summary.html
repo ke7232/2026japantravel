@@ -16,7 +16,6 @@
         
         .container { padding: 20px; max-width: 500px; margin: auto; }
 
-        /* 總額卡片進化版 */
         .total-card { 
             background: linear-gradient(135deg, #76c7ff, #5da9e9); color: white; padding: 25px; 
             border-radius: 30px; text-align: center; box-shadow: 0 12px 30px rgba(93,169,233,0.3); 
@@ -58,40 +57,35 @@
 </header>
 
 <div id="loading-container">
-    <div style="font-size: 14px; color: #aaa;">✨ 正在生成精美圖表...</div>
+    <div style="font-size: 14px; color: #aaa;">✨ 正在計算所有帳目...</div>
     <div class="progress-bar"><div class="progress-inner"></div></div>
 </div>
 
 <div class="container" id="main-ui" style="display:none;">
     <div class="total-card">
-        <div style="font-size: 13px; opacity: 0.9; letter-spacing: 1px;">全家旅程總支出估算</div>
+        <div style="font-size: 13px; opacity: 0.9; letter-spacing: 1px;">全家旅程總支出</div>
         <div id="sumJPY" style="font-size: 38px; font-weight: bold; margin: 5px 0;">¥ 0</div>
         <div id="sumTWD" style="font-size: 14px; opacity: 0.8;">約台幣 $0 元</div>
         <div class="avg-info">
-            <div>👥 均分(5人) <br> <b id="avgJPY">¥ 0</b></div>
-            <div>🇹🇼 均分(台幣) <br> <b id="avgTWD">$ 0</b></div>
+            <div>👥 每人平均 <br> <b id="avgJPY">¥ 0</b></div>
+            <div>🇹🇼 台幣均分 <br> <b id="avgTWD">$ 0</b></div>
         </div>
     </div>
 
     <div class="chart-box">
-        <h3>📈 每日消費趨勢 (JPY)</h3>
-        <canvas id="trendChart" style="max-height: 200px;"></canvas>
-    </div>
-
-    <div class="chart-box">
-        <h3>👤 成員代墊排名</h3>
+        <h3>🏆 誰花最多錢排行榜 (JPY)</h3>
         <canvas id="userChart"></canvas>
     </div>
 
     <div class="chart-box">
         <h3>🍱 消費分類分析</h3>
         <select class="filter-select" id="userFilter" onchange="updateCatChart()">
-            <option value="all">📊 查看全體成員</option>
-            <option value="航">🙋‍♂️ 查看 航 的消費</option>
-            <option value="安">🙋‍♀️ 查看 安 的消費</option>
-            <option value="香">🙋‍♀️ 查看 香 的消費</option>
-            <option value="瑩">🙋‍♀️ 查看 瑩 的消費</option>
-            <option value="廷">🙋‍♂️ 查看 廷 的消費</option>
+            <option value="all">📊 查看全體成員佔比</option>
+            <option value="航">🙋‍♂️ 查看 航 的消費分析</option>
+            <option value="安">🙋‍♀️ 查看 安 的消費分析</option>
+            <option value="香">🙋‍♀️ 查看 香 的消費分析</option>
+            <option value="瑩">🙋‍♀️ 查看 瑩 的消費分析</option>
+            <option value="廷">🙋‍♂️ 查看 廷 的消費分析</option>
         </select>
         <canvas id="catChart"></canvas>
         <div id="noDataMsg" style="display:none; color:#ccc; padding:30px;">該成員目前沒有記帳紀錄 ✨</div>
@@ -119,10 +113,9 @@
             document.getElementById('loading-container').style.display = 'none';
             document.getElementById('main-ui').style.display = 'block';
 
-            renderTrendChart();
             renderUserChart();
             updateCatChart();
-        } catch(e) { document.getElementById('loading-container').innerHTML = "❌ 讀取失敗"; }
+        } catch(e) { document.getElementById('loading-container').innerHTML = "❌ 讀取失敗，請確認資料來源"; }
     }
 
     function processHeaderStats() {
@@ -135,35 +128,6 @@
         document.getElementById('avgTWD').innerText = `$ ${Math.round(twdTotal / 5).toLocaleString()}`;
     }
 
-    // 新增：趨勢圖
-    function renderTrendChart() {
-        let days = {};
-        allExpenses.forEach(row => {
-            const date = new Date(row.時間);
-            const dateStr = `${date.getMonth()+1}/${date.getDate()}`;
-            days[dateStr] = (days[dateStr] || 0) + (parseFloat(row.日幣金額) || 0);
-        });
-
-        new Chart(document.getElementById('trendChart'), {
-            type: 'line',
-            data: {
-                labels: Object.keys(days),
-                datasets: [{
-                    data: Object.values(days),
-                    borderColor: '#76c7ff',
-                    backgroundColor: 'rgba(118, 199, 255, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 5
-                }]
-            },
-            options: { 
-                plugins: { legend: { display: false } },
-                scales: { y: { display: false }, x: { grid: { display: false } } }
-            }
-        });
-    }
-
     function renderUserChart() {
         let userStats = {};
         allExpenses.forEach(row => {
@@ -171,21 +135,32 @@
             userStats[name] = (userStats[name] || 0) + (parseFloat(row.日幣金額) || 0);
         });
 
+        // 轉換為陣列並排序，讓花最多的人在最上面 (修改處 2)
+        const sortedData = Object.entries(userStats)
+            .sort((a, b) => b[1] - a[1]); 
+
         new Chart(document.getElementById('userChart'), {
             type: 'bar',
             data: {
-                labels: Object.keys(userStats),
+                labels: sortedData.map(d => d[0]),
                 datasets: [{
-                    data: Object.values(userStats),
-                    backgroundColor: ['#76c7ff', '#ffcb05', '#ff9f40', '#4bc0c0', '#9966ff'],
+                    data: sortedData.map(d => d[1]),
+                    backgroundColor: ['#ffcb05', '#76c7ff', '#ff9f40', '#4bc0c0', '#9966ff'],
                     borderRadius: 8
                 }]
             },
             options: { 
                 indexAxis: 'y',
-                plugins: { legend: { display: false } },
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => ` ¥${ctx.parsed.x.toLocaleString()}`
+                        }
+                    }
+                },
                 scales: { 
-                    x: { ticks: { display: false }, grid: { display: false }, border: { display: false } },
+                    x: { grid: { display: false }, border: { display: false } },
                     y: { grid: { display: false }, border: { display: false } }
                 }
             }
