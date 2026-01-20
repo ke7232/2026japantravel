@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>常用連結 - 2026日本行</title>
+    <style>
+        :root { --primary: #76c7ff; --bg: #f7f9fc; --soft: #e3f2fd; }
+        body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; }
+        header { background: white; padding: 15px 20px; display: flex; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
+        .back-btn { margin-right: 15px; cursor: pointer; display: flex; align-items: center; }
+        
+        .container { padding: 20px; }
+        .category-title { font-size: 14px; color: #bbb; margin: 20px 0 10px 5px; font-weight: bold; letter-spacing: 1px; }
+        
+        /* 連結卡片樣式 */
+        .link-card { 
+            background: white; border-radius: 20px; padding: 18px; margin-bottom: 12px; 
+            display: flex; align-items: center; text-decoration: none; color: #333;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.03); transition: 0.2s; border: 1px solid transparent;
+        }
+        .link-card:active { transform: scale(0.98); background: #fafafa; border-color: var(--soft); }
+        
+        .icon-circle { 
+            width: 45px; height: 45px; border-radius: 15px; background: var(--soft); 
+            display: flex; align-items: center; justify-content: center; font-size: 20px; margin-right: 15px;
+        }
+        .link-info { flex: 1; }
+        .link-name { font-weight: bold; font-size: 16px; margin-bottom: 2px; display: block; }
+        .link-desc { font-size: 12px; color: #aaa; }
+        .arrow { color: #eee; font-size: 18px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="back-btn" onclick="location.href='index.html'">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#76c7ff" stroke-width="3">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+    </div>
+    <b style="font-size: 18px;">🔗 常用連結</b>
+</header>
+
+<div class="container">
+    
+    <div class="category-title">✦ 交通與查詢</div>
+    <a href="https://www.jorudan.co.jp/" class="link-card" target="_blank">
+        <div class="icon-circle">🚃</div>
+        <div class="link-info">
+            <span class="link-name">Jorudan 乘換案內</span>
+            <span class="link-desc">日本電車轉乘、票價即時查詢</span>
+        </div>
+        <div class="arrow">❯</div>
+    </a>
+    
+    <a href="https://www.google.com/maps" class="link-card" target="_blank">
+        <div class="icon-circle">🗺️</div>
+        <div class="link-info">
+            <span class="link-name">Google Maps</span>
+            <span class="link-desc">地圖導航與商家資訊</span>
+        </div>
+        <div class="arrow">❯</div>
+    </a>
+
+    <div class="category-title">✦ 旅遊必備</div>
+    <a href="https://www.vjw.digital.go.jp/" class="link-card" target="_blank">
+        <div class="icon-circle">🛂</div>
+        <div class="link-info">
+            <span class="link-name">Visit Japan Web</span>
+            <span class="link-desc">入境審查、海關申報 QR Code</span>
+        </div>
+        <div class="arrow">❯</div>
+    </a>
+    
+    <a href="https://translate.google.com/" class="link-card" target="_blank">
+        <div class="icon-circle">🗣️</div>
+        <div class="link-info">
+            <span class="link-name">Google 翻譯</span>
+            <span class="link-desc">支援鏡頭即時翻譯菜單</span>
+        </div>
+        <div class="arrow">❯</div>
+    </a>
+
+    <div class="category-title">✦ 緊急聯絡</div>
+    <a href="tel:+81332805510" class="link-card">
+        <div class="icon-circle" style="background: #ffebeb;">📞</div>
+        <div class="link-info">
+            <span class="link-name">台北駐日經濟代表處</span>
+            <span class="link-desc">緊急急難救助電話</span>
+        </div>
+        <div class="arrow">❯</div>
+    </a>
+
+</div>
+
+</body>
+</html>
