@@ -17,7 +17,9 @@
         
         header { display: flex; justify-content: space-between; align-items: center; padding: 25px 20px; background: white; border-bottom: 1px solid #f9f9f9; }
         .logo { font-size: 20px; font-weight: bold; }
-        #version-display { font-size: 10px; color: #ccc; margin-top: 5px; }
+        
+        /* Time Stamp 顯示樣式 */
+        #timestamp-display { font-size: 9px; color: #ccc; margin-top: 2px; font-family: monospace; }
 
         .menu-wrapper { position: relative; z-index: 1000; }
         .menu-icon { width: 40px; height: 40px; background: #fff; border-radius: 50%; box-shadow: 0 3px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid #f0f0f0; }
@@ -52,7 +54,7 @@
     <header>
         <div>
             <div class="logo">2026 王王王日本行</div>
-            <div id="version-display">v0.0.0</div>
+            <div id="timestamp-display">Update: 2026-01-20 16:15</div>
         </div>
         <div class="menu-wrapper">
             <div class="menu-icon" id="menuToggle">
@@ -96,18 +98,7 @@
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxktADedYUP_K5X8S0aJ-f0XKGjev2qOuNZi1LNN7E5vq1b26KA-71Oc1IZnR1drgYfdg/exec"; 
     let currentCat = "食", currentUser = "航";
 
-    // 1. 版本控制
-    function initVersion() {
-        let vStr = localStorage.getItem('appVersion') || "0.0.0";
-        let parts = vStr.split('.').map(Number);
-        parts[2]++;
-        if (parts[2] >= 100) { parts[2] = 0; parts[1]++; }
-        let newVersion = parts.join('.');
-        localStorage.setItem('appVersion', newVersion);
-        document.getElementById('version-display').innerText = "v" + newVersion;
-    }
-
-    // 2. 登入檢查與執行
+    // 登入檢查與執行
     function checkLogin() {
         if(localStorage.getItem('isLoggedIn') === 'true') {
             document.getElementById('login-overlay').style.display = 'none';
@@ -118,7 +109,6 @@
         const pass = document.getElementById('passInput').value;
         if(pass === '1234') {
             localStorage.setItem('isLoggedIn', 'true');
-            // 關鍵修正：直接設為 none，確保不擋點擊
             document.getElementById('login-overlay').style.display = 'none';
         } else {
             alert('密碼錯誤！');
@@ -129,9 +119,8 @@
         if (e.key === 'Enter') handleLogin();
     }
 
-    // 3. UI 控制
+    // UI 控制
     window.onload = () => {
-        initVersion();
         checkLogin();
         
         const menuToggle = document.getElementById('menuToggle');
@@ -149,40 +138,37 @@
         el.classList.add('active'); currentUser = val;
     }
 
-function submitData() {
-    const btn = document.getElementById('send-btn');
-    const status = document.getElementById('status');
-    const amount = document.getElementById('amount').value;
-    const item = document.getElementById('item').value;
+    function submitData() {
+        const btn = document.getElementById('send-btn');
+        const status = document.getElementById('status');
+        const amount = document.getElementById('amount').value;
+        const item = document.getElementById('item').value;
 
-    if(!amount || !item) return alert('請填寫完整資訊');
+        if(!amount || !item) return alert('請填寫完整資訊');
 
-    btn.disabled = true;
-    status.innerText = "⏳ 傳送中...";
-    
-    fetch(GAS_URL, {
-        method: "POST",
-        mode: "no-cors",
-        body: JSON.stringify({ 
-            category: currentCat, 
-            amount: amount, 
-            item: item, 
-            user: currentUser 
-        })
-    }).then(() => {
-        status.innerText = "✅ 已成功寫入 Google Sheet！";
-        status.style.color = "#4CAF50";
-        document.getElementById('amount').value = "";
-        document.getElementById('item').value = "";
-        btn.disabled = false;
+        btn.disabled = true;
+        status.innerText = "⏳ 傳送中...";
         
-        // 成功後可以手動觸發一次版本號更新，代表一次動作完成
-        updateVersion(); 
-    }).catch(err => {
-        status.innerText = "❌ 傳送失敗，請檢查網路";
-        btn.disabled = false;
-    });
-}
+        fetch(GAS_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: JSON.stringify({ 
+                category: currentCat, 
+                amount: amount, 
+                item: item, 
+                user: currentUser 
+            })
+        }).then(() => {
+            status.innerText = "✅ 已成功寫入 Google Sheet！";
+            status.style.color = "#4CAF50";
+            document.getElementById('amount').value = "";
+            document.getElementById('item').value = "";
+            btn.disabled = false;
+        }).catch(err => {
+            status.innerText = "❌ 傳送失敗，請檢查網路";
+            btn.disabled = false;
+        });
+    }
 </script>
 </body>
 </html>
