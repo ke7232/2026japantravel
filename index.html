@@ -8,24 +8,43 @@
         :root { --primary: #76c7ff; --secondary: #ffcb05; --bg: #fdfdff; }
         body { font-family: "PingFang TC", sans-serif; background: #f0f8ff; margin: 0; display: flex; justify-content: center; }
         .app-container { width: 100%; max-width: 500px; background: white; min-height: 100vh; position: relative; }
-        #login-overlay { position: fixed; inset: 0; background: #fff; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.5s; }
+        
+        /* 登入遮罩 */
+        #login-overlay { 
+            position: fixed; inset: 0; background: #fff; z-index: 3000; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            transition: opacity 0.5s ease; 
+        }
+        
         header { display: flex; justify-content: space-between; align-items: center; padding: 25px 20px; background: white; border-bottom: 1px solid #f9f9f9; }
         .logo { font-size: 20px; font-weight: bold; }
+        
         .menu-wrapper { position: relative; z-index: 1000; }
         .menu-icon { width: 40px; height: 40px; background: #fff; border-radius: 50%; box-shadow: 0 3px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid #f0f0f0; }
-        .menu-dropdown { display: none; position: absolute; top: 50px; right: 0; background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-radius: 15px; min-width: 160px; border: 1px solid #f0faff; overflow: hidden; }
+        
+        .menu-dropdown { 
+            display: none; position: absolute; top: 50px; right: 0; 
+            background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
+            border-radius: 15px; min-width: 160px; border: 1px solid #f0faff; overflow: hidden; 
+        }
         .menu-dropdown.show { display: block; }
         .menu-item { padding: 15px 18px; border-bottom: 1px solid #f9f9f9; font-size: 15px; cursor: pointer; text-decoration: none; color: #444; display: block; }
+
         .content { padding: 0 20px 50px; }
         h3 { color: #bbb; font-size: 14px; margin: 25px 0 10px; }
+        
         .cat-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         .selection-btn { background: #fff; border: 2px solid #f4f8fb; padding: 15px 5px; border-radius: 20px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
         .selection-btn.active { border-color: var(--primary); background: #f0faff; color: var(--primary); font-weight: bold; }
+        
         .user-group { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         .user-btn { background: #fff; border: 2px solid #f0f0f0; padding: 12px 0; border-radius: 50px; font-size: 13px; text-align: center; cursor: pointer; }
         .user-btn.active { border-color: var(--secondary); background: #fffdeb; color: #b48a00; font-weight: bold; }
+        
         .input-box { width: 100%; padding: 16px; margin-bottom: 12px; border: 2px solid #f0f4f8; border-radius: 20px; box-sizing: border-box; font-size: 16px; text-align: center; outline: none; background: #fafcfe; }
         .submit-btn { width: 100%; padding: 18px; background: linear-gradient(135deg, #76c7ff, #5da9e9); color: white; border: none; border-radius: 30px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 8px 15px rgba(93,169,233,0.3); }
+        
+        @keyframes popIn { from { opacity:0; transform: translateY(-10px); } to { opacity:1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -34,7 +53,7 @@
     <div style="font-size: 50px;">✈️</div>
     <h2 style="margin: 20px 0;">✨ 2026 王王王日本行 ✨</h2>
     <input type="password" id="passInput" class="input-box" style="width: 80%" placeholder="輸入密碼 (1234)">
-    <button class="submit-btn" style="width: 80%" onclick="login()">出發Go ✈️</button>
+    <button class="submit-btn" style="width: 80%" onclick="handleLogin()">出發Go ✈️</button>
 </div>
 
 <div class="app-container">
@@ -42,4 +61,123 @@
         <div class="logo">2026 王王王日本行</div>
         <div class="menu-wrapper">
             <div class="menu-icon" id="menuToggle">
-                <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#aaa" d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4
+                <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#aaa" d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+            </div>
+            <div id="menu" class="menu-dropdown">
+                <a href="schedule.html" class="menu-item">📅 每日行程</a>
+                <a href="summary.html" class="menu-item">📊 記帳總覽</a>
+                <a href="game.html" class="menu-item">🎮 挑戰小遊戲</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="content">
+        <h3>✦ 1. 選擇分類 ✦</h3>
+        <div class="cat-group">
+            <div class="selection-btn active" onclick="selectCat(this, '食')">🍱 食</div>
+            <div class="selection-btn" onclick="selectCat(this, '行')">🚃 行</div>
+            <div class="selection-btn" onclick="selectCat(this, '購物')">🛍️ 購物</div>
+            <div class="selection-btn" onclick="selectCat(this, '景點')">🗼 景點</div>
+            <div class="selection-btn" onclick="selectCat(this, '雜')">🎈 雜</div>
+            <div class="selection-btn" onclick="selectCat(this, '住')">🏨 住</div>
+        </div>
+        <h3>✦ 2. 輸入明細 ✦</h3>
+        <input type="number" id="amount" class="input-box" placeholder="日幣金額 (JPY)" inputmode="numeric">
+        <input type="text" id="item" class="input-box" placeholder="品名 (例：拉麵)">
+        <h3>✦ 3. 誰出的錢 ✦</h3>
+        <div class="user-group">
+            <div class="user-btn active" onclick="selectUser(this, '航')">航</div>
+            <div class="user-btn" onclick="selectUser(this, '安')">安</div>
+            <div class="user-btn" onclick="selectUser(this, '香')">香</div>
+            <div class="user-btn" onclick="selectUser(this, '瑩')">瑩</div>
+            <div class="user-btn" onclick="selectUser(this, '廷')">廷</div>
+        </div>
+        <button id="send-btn" class="submit-btn" style="margin-top: 30px;" onclick="submitData()">完成並存檔 ✨</button>
+        <p id="status" style="text-align: center; margin-top: 15px; font-weight: bold;"></p>
+    </div>
+</div>
+
+<script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxktADedYUP_K5X8S0aJ-f0XKGjev2qOuNZi1LNN7E5vq1b26KA-71Oc1IZnR1drgYfdg/exec"; 
+    let currentCat = "食", currentUser = "航";
+
+    // 檢查登入狀態
+    window.onload = function() {
+        if(localStorage.getItem('isLoggedIn') === 'true') {
+            document.getElementById('login-overlay').style.display = 'none';
+        }
+    };
+
+    // 修正後的登入函式
+    function handleLogin() {
+        const pass = document.getElementById('passInput').value;
+        if(pass === '1234') {
+            localStorage.setItem('isLoggedIn', 'true');
+            const overlay = document.getElementById('login-overlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 500);
+        } else {
+            alert('密碼錯誤！');
+        }
+    }
+
+    // 選單控制
+    const menuToggle = document.getElementById('menuToggle');
+    const menu = document.getElementById('menu');
+    menuToggle.onclick = function(e) {
+        e.stopPropagation();
+        menu.classList.toggle('show');
+    };
+    document.onclick = function() {
+        menu.classList.remove('show');
+    };
+
+    function selectCat(el, val) {
+        document.querySelectorAll('.selection-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        currentCat = val;
+    }
+
+    function selectUser(el, val) {
+        document.querySelectorAll('.user-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+        currentUser = val;
+    }
+
+    function submitData() {
+        const btn = document.getElementById('send-btn');
+        const status = document.getElementById('status');
+        const amount = document.getElementById('amount').value;
+        const item = document.getElementById('item').value;
+
+        if(!amount || !item) return alert('請填寫完整資訊');
+
+        btn.disabled = true;
+        status.innerText = "同步中...";
+        
+        fetch(GAS_URL, {
+            method: "POST",
+            mode: "no-cors",
+            body: JSON.stringify({
+                category: currentCat,
+                amount: amount,
+                item: item,
+                user: currentUser
+            })
+        }).then(() => {
+            status.innerText = "✅ 成功存入雲端！";
+            status.style.color = "#4CAF50";
+            document.getElementById('amount').value = "";
+            document.getElementById('item').value = "";
+            btn.disabled = false;
+            setTimeout(() => { status.innerText = ""; }, 3000);
+        }).catch(() => {
+            status.innerText = "❌ 失敗，請重試";
+            btn.disabled = false;
+        });
+    }
+</script>
+</body>
+</html>
