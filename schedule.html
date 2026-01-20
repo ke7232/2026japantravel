@@ -118,17 +118,26 @@
         try {
             const resp = await fetch(GAS_URL + "?type=schedule");
             const rawData = await resp.json();
+            
             allData = rawData.sort((a, b) => {
-                const getM = (t) => { if(!t || !t.includes(':')) return 9999; const [h, m] = t.split(':').map(Number); return h * 60 + m; };
-                return getM(a.時間) - getM(getM(b.時間));
+                const getM = (t) => { 
+                    if(!t || !t.includes(':')) return 9999; 
+                    const parts = t.split(':');
+                    return parseInt(parts[0]) * 60 + parseInt(parts[1]); 
+                };
+                return getM(a.時間) - getM(b.時間);
             });
+            
             document.getElementById('loading-container').style.display = 'none';
             renderDates();
             const now = new Date();
             const tStr = `${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
             const ex = TRIP_DATES.find(i => i.d === tStr);
             showDay(currentActiveDate || (ex ? tStr : TRIP_DATES[0].d));
-        } catch(e) { document.getElementById('loading-container').innerHTML = "❌ 讀取失敗"; }
+        } catch(e) { 
+            console.error(e);
+            document.getElementById('loading-container').innerHTML = "❌ 讀取失敗，請確認網路與資料"; 
+        }
     }
 
     function renderDates() {
@@ -144,11 +153,11 @@
         document.querySelectorAll('.date-box').forEach(b => b.classList.remove('active'));
         const activeBtn = el || document.getElementById(`btn-${tDate.replace(/\//g,'')}`);
         if(activeBtn) { activeBtn.classList.add('active'); activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center' }); }
+        
         const container = document.getElementById('scheduleContainer');
         const filtered = allData.filter(d => d.日期 && d.日期.toString().replace(/-/g, '/') === tDate);
         
         container.innerHTML = filtered.length ? filtered.map(item => {
-            // 重要：判斷是否有關鍵字，有才顯示按鈕
             const keyword = item["Google map keyword"] || "";
             const mapHtml = keyword ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(keyword)}" class="map-link" target="_blank">📍 導覽 / 查看地圖</a>` : "";
 
@@ -166,17 +175,27 @@
     }
 
     function openAddModal() {
-        isEditMode = false; document.getElementById('modalTitle').innerText = "新增行程 📝";
-        document.getElementById('formTitle').value = ""; document.getElementById('formContent').value = "";
-        document.getElementById('formKeyword').value = ""; document.getElementById('formHour').value = "10";
-        document.getElementById('formMin').value = "00"; document.getElementById('modal-overlay').style.display = 'flex';
+        isEditMode = false; 
+        document.getElementById('modalTitle').innerText = "新增行程 📝";
+        document.getElementById('formTitle').value = ""; 
+        document.getElementById('formContent').value = "";
+        document.getElementById('formKeyword').value = ""; 
+        document.getElementById('formHour').value = "10";
+        document.getElementById('formMin').value = "00"; 
+        document.getElementById('modal-overlay').style.display = 'flex';
     }
 
     function openEditModal(time, title, content, kw) {
-        isEditMode = true; document.getElementById('modalTitle').innerText = "編輯行程 ✏️";
-        document.getElementById('formTitle').value = title; document.getElementById('formContent').value = content;
+        isEditMode = true; 
+        document.getElementById('modalTitle').innerText = "編輯行程 ✏️";
+        document.getElementById('formTitle').value = title; 
+        document.getElementById('formContent').value = content;
         document.getElementById('formKeyword').value = kw || "";
-        if(time && time.includes(':')) { const [h, m] = time.split(':'); document.getElementById('formHour').value = h.padStart(2, '0'); document.getElementById('formMin').value = m.padStart(2, '0'); }
+        if(time && time.includes(':')) { 
+            const parts = time.split(':'); 
+            document.getElementById('formHour').value = parts[0].padStart(2, '0'); 
+            document.getElementById('formMin').value = parts[1].padStart(2, '0'); 
+        }
         document.getElementById('oldDataKey').value = JSON.stringify({oldTime: time, oldTitle: title});
         document.getElementById('modal-overlay').style.display = 'flex';
     }
@@ -184,26 +203,39 @@
     function closeModals() { document.getElementById('modal-overlay').style.display = 'none'; }
 
     function submitForm() {
-        const title = document.getElementById('formTitle').value, hour = document.getElementById('formHour').value, min = document.getElementById('formMin').value;
-        const time = `${hour}:${min}`, content = document.getElementById('formContent').value, kw = document.getElementById('formKeyword').value;
+        const title = document.getElementById('formTitle').value;
+        const hour = document.getElementById('formHour').value;
+        const min = document.getElementById('formMin').value;
+        const kw = document.getElementById('formKeyword').value;
+        const time = `${hour}:${min}`;
+        const content = document.getElementById('formContent').value;
+        
         if(!title) return alert("請輸入標題");
+        
         const payload = { action: isEditMode ? "edit" : "add", date: currentActiveDate, time, title, content, keyword: kw };
-        if(isEditMode) { const old = JSON.parse(document.getElementById('oldDataKey').value); payload.oldTime = old.oldTime; payload.oldTitle = old.oldTitle; }
+        if(isEditMode) { 
+            const old = JSON.parse(document.getElementById('oldDataKey').value); 
+            payload.oldTime = old.oldTime; 
+            payload.oldTitle = old.oldTitle; 
+        }
         sendRequest(payload);
     }
 
     function handleDelete(time, title) {
-        const pass = prompt("管理密碼 (9453)："); if (pass !== "9453") return pass && alert("密碼錯誤");
+        const pass = prompt("管理密碼 (9453)："); 
+        if (pass !== "9453") return pass && alert("密碼錯誤");
         sendRequest({ action: "delete", date: currentActiveDate, time, title });
     }
 
     function sendRequest(data) {
-        closeModals(); document.getElementById('loading-container').style.display = 'block';
+        closeModals(); 
+        document.getElementById('loading-container').style.display = 'block';
         fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(data) });
         setTimeout(() => location.reload(), 1500);
     }
 
-    initTimeOptions(); fetchSchedule();
+    initTimeOptions(); 
+    fetchSchedule();
 </script>
 </body>
 </html>
