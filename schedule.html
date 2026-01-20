@@ -3,38 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>每日行程 - 管理版</title>
+    <title>每日行程</title>
     <style>
         :root { --primary: #76c7ff; --bg: #f7f9fc; --danger: #ff5e5e; }
         body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; }
         header { background: white; padding: 15px 20px; display: flex; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
         .back-btn { margin-right: 15px; cursor: pointer; }
         
-        /* 日期導覽 */
-        .date-selector { display: flex; overflow-x: auto; padding: 15px; gap: 12px; background: white; border-bottom: 1px solid #eee; scrollbar-width: none; }
-        .date-box { min-width: 65px; padding: 12px 5px; background: #fff; border: 1px solid #eee; border-radius: 18px; text-align: center; flex-shrink: 0; }
-        .date-box.active { background: var(--primary); color: white; font-weight: bold; box-shadow: 0 5px 15px rgba(118,199,255,0.3); }
+        /* 日期導覽優化 */
+        .date-selector { display: flex; overflow-x: auto; padding: 15px; gap: 10px; background: white; border-bottom: 1px solid #eee; scrollbar-width: none; }
+        .date-selector::-webkit-scrollbar { display: none; }
+        .date-box { min-width: 85px; padding: 10px 5px; background: #fff; border: 1px solid #eee; border-radius: 15px; text-align: center; flex-shrink: 0; transition: 0.3s; }
+        .date-box.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold; box-shadow: 0 4px 10px rgba(118,199,255,0.3); }
+        .date-text { font-size: 13px; margin-bottom: 2px; }
+        .day-text { font-size: 11px; opacity: 0.8; }
 
         /* 行程卡片 */
-        .timeline { padding: 20px; }
-        .card { background: white; border-radius: 20px; padding: 18px; margin-bottom: 20px; box-shadow: 0 3px 12px rgba(0,0,0,0.05); position: relative; }
-        .time-label { font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 5px; }
-        .delete-btn { position: absolute; top: 15px; right: 15px; color: #ccc; cursor: pointer; font-size: 18px; padding: 5px; }
+        .timeline { padding: 10px 20px; }
+        .card { background: white; border-radius: 20px; padding: 18px; margin-bottom: 15px; box-shadow: 0 3px 12px rgba(0,0,0,0.05); position: relative; border-left: 5px solid var(--primary); }
+        .time-label { font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+        .delete-btn { position: absolute; top: 15px; right: 15px; color: #eee; cursor: pointer; font-size: 18px; transition: 0.2s; }
         .delete-btn:hover { color: var(--danger); }
-        h4 { margin: 0 0 8px; font-size: 17px; padding-right: 30px; }
-        .card-content { font-size: 15px; color: #666; white-space: pre-wrap; }
+        h4 { margin: 0 0 8px; font-size: 17px; padding-right: 30px; color: #333; }
+        .card-content { font-size: 14px; color: #666; white-space: pre-wrap; line-height: 1.5; }
 
-        /* 底部新增按鈕 */
-        .add-fab { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 5px 20px rgba(118,199,255,0.5); cursor: pointer; border: none; z-index: 2000; }
+        .add-fab { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 5px 20px rgba(118,199,255,0.4); cursor: pointer; border: none; z-index: 2000; }
         
-        #loading { text-align: center; padding: 50px; color: #aaa; }
+        #loading { text-align: center; padding: 30px; color: #aaa; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <header>
     <div class="back-btn" onclick="location.href='index.html'"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#76c7ff" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
-    <b style="font-size: 18px;">📅 行程管理系統</b>
+    <b style="font-size: 18px;">📅 每日行程</b>
 </header>
 
 <div class="date-selector" id="dateSelector"></div>
@@ -47,26 +49,47 @@
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxktADedYUP_K5X8S0aJ-f0XKGjev2qOuNZi1LNN7E5vq1b26KA-71Oc1IZnR1drgYfdg/exec";
     let allData = [];
     let currentActiveDate = "";
+    
+    // 定義固定 6 天範圍
+    const TRIP_DATES = [
+        { d: "2026/03/01", label: "3/1(日)" },
+        { d: "2026/03/02", label: "3/2(一)" },
+        { d: "2026/03/03", label: "3/3(二)" },
+        { d: "2026/03/04", label: "3/4(三)" },
+        { d: "2026/03/05", label: "3/5(四)" },
+        { d: "2026/03/06", label: "3/6(五)" }
+    ];
 
     async function fetchSchedule() {
         if(localStorage.getItem('isLoggedIn') !== 'true') return location.href='index.html';
         try {
             const resp = await fetch(GAS_URL + "?type=schedule");
             allData = await resp.json();
-            allData.sort((a, b) => (a.時間 > b.時間 ? 1 : -1));
+            
+            // 統一日期顯示格式並排序
+            allData.sort((a, b) => a.時間.localeCompare(b.時間));
+            
             document.getElementById('loading').style.display = 'none';
             renderDates();
-            showDay(currentActiveDate || allData[0].日期);
-        } catch(e) { document.getElementById('loading').innerText = "連線失敗"; }
+            
+            // 自動跳轉邏輯
+            const today = new Date();
+            const todayStr = `${today.getFullYear()}/${String(today.getMonth()+1).padStart(2,'0')}/${String(today.getDate()).padStart(2,'0')}`;
+            
+            // 如果當前日期在範圍內則跳到當前，否則預設第一天
+            const hasToday = TRIP_DATES.some(item => item.d === todayStr);
+            showDay(hasToday ? todayStr : TRIP_DATES[0].d);
+            
+        } catch(e) { 
+            document.getElementById('loading').innerText = "連線失敗，請檢查網路"; 
+        }
     }
 
     function renderDates() {
-        const dates = [...new Set(allData.map(d => d.日期))];
-        document.getElementById('dateSelector').innerHTML = dates.map((d, i) => {
-            const dateObj = new Date(d);
-            return `<div class="date-box" id="btn-${d.replace(/\//g,'')}" onclick="showDay('${d}', this)">
-                <div style="font-size:11px">${dateObj.getMonth()+1}/${dateObj.getDate()}</div>
-                <div>D${i+1}</div>
+        document.getElementById('dateSelector').innerHTML = TRIP_DATES.map((item, i) => {
+            return `<div class="date-box" id="btn-${item.d.replace(/\//g,'')}" onclick="showDay('${item.d}', this)">
+                <div class="date-text">${item.label}</div>
+                <div class="day-text">Day ${i+1}</div>
             </div>`;
         }).join('');
     }
@@ -74,53 +97,97 @@
     function showDay(targetDate, el) {
         currentActiveDate = targetDate;
         document.querySelectorAll('.date-box').forEach(b => b.classList.remove('active'));
-        const activeBtn = el || document.getElementById(`btn-${targetDate.replace(/\//g,'')}`);
-        if(activeBtn) activeBtn.classList.add('active');
+        const btnId = `btn-${targetDate.replace(/\//g,'')}`;
+        const activeBtn = el || document.getElementById(btnId);
+        
+        if(activeBtn) {
+            activeBtn.classList.add('active');
+            activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+        }
 
-        const filtered = allData.filter(d => d.日期 === targetDate);
-        document.getElementById('scheduleContainer').innerHTML = filtered.map(item => `
-            <div class="card">
-                <div class="delete-btn" onclick="handleDelete('${item.日期}', '${item.時間}', '${item.標題}')">🗑️</div>
-                <div class="time-label">🕙 ${item.時間}</div>
-                <h4>${item.標題}</h4>
-                <div class="card-content">${item.內容}</div>
-            </div>`).join('');
-    }
+        const filtered = allData.filter(d => {
+            // 處理 Google Sheet 傳回的日期格式可能不一的問題
+            const rowDate = new Date(d.日期);
+            const formattedRowDate = `${rowDate.getFullYear()}/${String(rowDate.getMonth()+1).padStart(2,'0')}/${String(rowDate.getDate()).padStart(2,'0')}`;
+            return formattedRowDate === targetDate;
+        });
 
-    // 刪除邏輯：密碼確認
-    async function handleDelete(date, time, title) {
-        const pass = prompt("請輸入刪除密碼以確認動作：");
-        if (pass === "9453") {
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('loading').innerText = "正在刪除...";
-            await fetch(GAS_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify({ action: "delete", date, time, title })
-            });
-            setTimeout(fetchSchedule, 1500); // 重新抓取資料
-        } else if (pass !== null) {
-            alert("密碼錯誤，拒絕刪除！");
+        const container = document.getElementById('scheduleContainer');
+        if (filtered.length === 0) {
+            container.innerHTML = '<div style="text-align:center; color:#ccc; margin-top:50px;">本日尚無行程 ✨</div>';
+        } else {
+            container.innerHTML = filtered.map(item => `
+                <div class="card">
+                    <div class="delete-btn" onclick="handleDelete('${item.日期}', '${item.時間}', '${item.標題}')">🗑️</div>
+                    <div class="time-label">🕙 ${item.時間}</div>
+                    <h4>${item.標題}</h4>
+                    <div class="card-content">${item.內容}</div>
+                </div>`).join('');
         }
     }
 
-    // 新增邏輯：手動輸入
-    async function showAddPrompt() {
-        const title = prompt("請輸入行程標題 (例：逛街)：");
-        if(!title) return;
-        const time = prompt("請輸入時間 (格式 14:30)：", "12:00");
-        const content = prompt("請輸入詳細內容：");
-        const date = prompt("請確認日期 (格式 2026/03/01)：", currentActiveDate);
+    // 修正刪除功能：增加 action 標記
+    async function handleDelete(date, time, title) {
+        const pass = prompt("請輸入管理密碼 (9453)：");
+        if (pass === "9453") {
+            const loader = document.getElementById('loading');
+            loader.style.display = 'block';
+            loader.innerText = "正在移除行程...";
+            
+            try {
+                await fetch(GAS_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    body: JSON.stringify({ 
+                        action: "delete", 
+                        date: date, 
+                        time: time, 
+                        title: title 
+                    })
+                });
+                // 延遲刷新確保後端已寫入
+                setTimeout(() => { location.reload(); }, 1000);
+            } catch (e) {
+                alert("刪除失敗");
+                loader.style.display = 'none';
+            }
+        } else if (pass !== null) {
+            alert("密碼錯誤！");
+        }
+    }
 
-        if (confirm(`確定要在 ${date} ${time} 新增「${title}」嗎？`)) {
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('loading').innerText = "正在新增...";
-            await fetch(GAS_URL, {
-                method: "POST",
-                mode: "no-cors",
-                body: JSON.stringify({ action: "add", date, time, title, content })
-            });
-            setTimeout(fetchSchedule, 1500);
+    // 修正新增功能：自動帶入日期
+    async function showAddPrompt() {
+        const title = prompt(`[${currentActiveDate}] 新增行程標題：`);
+        if(!title) return;
+        
+        const time = prompt("請輸入時間 (例如 14:30)：", "09:00");
+        if(!time) return;
+
+        const content = prompt("請輸入行程內容：");
+        
+        if (confirm(`確定在 ${currentActiveDate} ${time} 新增「${title}」嗎？`)) {
+            const loader = document.getElementById('loading');
+            loader.style.display = 'block';
+            loader.innerText = "正在同步至 Google Sheet...";
+            
+            try {
+                await fetch(GAS_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    body: JSON.stringify({ 
+                        action: "add", // 明確給予 add 動作
+                        date: currentActiveDate, 
+                        time: time, 
+                        title: title, 
+                        content: content 
+                    })
+                });
+                setTimeout(() => { location.reload(); }, 1000);
+            } catch (e) {
+                alert("新增失敗");
+                loader.style.display = 'none';
+            }
         }
     }
 
