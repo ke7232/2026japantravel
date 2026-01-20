@@ -3,195 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2026 王家日本行 - 每日行程</title>
+    <title>每日行程 - 2026 日本行</title>
     <style>
-        :root { --primary: #76c7ff; --accent: #ffcb05; --bg: #f8f9fa; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; }
-        
-        /* 頂部導覽 */
-        header { background: white; padding: 15px; display: flex; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); sticky: top; z-index: 100; }
-        .back-btn { text-decoration: none; font-size: 20px; margin-right: 15px; color: #666; }
-        .title { font-size: 18px; font-weight: bold; }
-
-        /* 日期選擇器 */
-        .date-selector { display: flex; overflow-x: auto; padding: 15px; gap: 10px; background: white; white-space: nowrap; -webkit-overflow-scrolling: touch; }
-        .date-box { 
-            min-width: 70px; padding: 10px; background: #fff; border: 1px solid #eee; border-radius: 12px; 
-            text-align: center; cursor: pointer; transition: 0.3s;
-        }
-        .date-box.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(118,199,255,0.3); }
-        .date-box div:first-child { font-size: 12px; opacity: 0.8; }
-        .date-box div:last-child { font-size: 16px; font-weight: bold; }
-
-        /* 行程內容 */
-        .day-content { display: none; padding: 15px; animation: fadeIn 0.4s ease; }
-        .day-content.active { display: block; }
-        
-        .card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .card h4 { margin: 0 0 10px 0; color: var(--primary); display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f0f0f0; padding-bottom: 8px; }
-        .info-row { margin: 8px 0; font-size: 15px; line-height: 1.5; }
-        .tag { display: inline-block; background: #eee; padding: 2px 8px; border-radius: 6px; font-size: 12px; margin-right: 5px; color: #666; }
-        .blue-tag { background: #eef7ff; color: #5da9e9; }
-
-        /* 管理按鈕 */
-        .admin-panel { display: flex; gap: 10px; padding: 0 15px; }
-        .add-btn { flex: 1; padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 10px; font-weight: bold; }
-        .del-btn { padding: 5px 10px; background: #ff5e5e; color: white; border: none; border-radius: 5px; float: right; font-size: 12px; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        :root { --primary: #76c7ff; --bg: #f7f9fc; }
+        body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; }
+        header { background: white; padding: 15px 20px; display: flex; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
+        .back-btn { margin-right: 15px; cursor: pointer; display: flex; align-items: center; }
+        .date-selector { display: flex; overflow-x: auto; padding: 15px; gap: 12px; background: white; border-bottom: 1px solid #eee; scrollbar-width: none; }
+        .date-selector::-webkit-scrollbar { display: none; }
+        .date-box { min-width: 65px; padding: 12px 5px; background: #fff; border: 1px solid #eee; border-radius: 18px; text-align: center; flex-shrink: 0; transition: 0.3s; }
+        .date-box.active { background: var(--primary); color: white; border-color: var(--primary); font-weight: bold; }
+        .timeline { padding: 20px; position: relative; }
+        .timeline::before { content: ''; position: absolute; left: 30px; top: 0; bottom: 0; width: 2px; background: #e0e6ed; z-index: 1; }
+        .timeline-item { position: relative; margin-bottom: 25px; padding-left: 45px; z-index: 2; }
+        .timeline-dot { position: absolute; left: 24px; top: 5px; width: 14px; height: 14px; background: white; border: 3px solid var(--primary); border-radius: 50%; }
+        .card { background: white; border-radius: 20px; padding: 18px; box-shadow: 0 3px 12px rgba(0,0,0,0.05); }
+        .time-label { font-size: 13px; font-weight: bold; color: var(--primary); margin-bottom: 5px; }
+        h4 { margin: 0 0 8px; font-size: 17px; }
+        .card-content { font-size: 15px; color: #666; line-height: 1.6; white-space: pre-wrap; }
+        #loading { text-align: center; padding: 100px 0; color: #aaa; }
     </style>
 </head>
 <body>
 
 <header>
-    <a href="index.html" class="back-btn">⬅</a>
-    <div class="title">📅 2026 日本行程表</div>
+    <div class="back-btn" onclick="location.href='index.html'">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#76c7ff" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </div>
+    <b style="font-size: 18px;">📅 2026 日本行程</b>
 </header>
 
-<div class="date-selector" id="dateSelector">
-    </div>
-
-<div id="scheduleContainer">
-    </div>
-
-<div class="admin-panel">
-    <button class="add-btn" onclick="addNewItem()">➕ 新增自訂行程</button>
-</div>
+<div class="date-selector" id="dateSelector"></div>
+<div id="loading">✨ 搬運行程中...</div>
+<div class="timeline" id="scheduleContainer"></div>
 
 <script>
-    // 行程原始資料
-    const tripData = [
-        { 
-            date: "2026-03-01", day: "DAY 1", week: "日",
-            items: [
-                { title: "✈️ 航班資訊", content: "BR192 松山(07:15) → 羽田(11:00)" },
-                { title: "🍽️ 預計午餐", content: "東京車站便當 或 羽田五代目花山烏冬" },
-                { title: "🏨 住宿資訊", content: "輕井澤王子飯店西館 小木屋 (可租腳踏車)" },
-                { title: "🛍️ 輕井澤 OUTLET", content: "10:00-19:00 (先領經護照領優惠券)" }
-            ]
-        },
-        { 
-            date: "2026-03-02", day: "DAY 2", week: "一",
-            items: [
-                { title: "⭐ 重點景點", content: "雲場池 (清晨散步首選)" },
-                { title: "🍽️ 今日餐食", content: "早餐: Truffle Bakery / 晚餐: OUTLET" }
-            ]
-        },
-        { 
-            date: "2026-03-03", day: "DAY 3", week: "二",
-            items: [
-                { title: "🛍️ 舊輕井澤銀座通", content: "米菲兔/史努比/澤屋果醬 (10:00開始)" },
-                { title: "♨️ 泡溫泉", content: "¥2000/人 (6:00-19:00)" },
-                { title: "⛪ 文化參訪", content: "輕井澤聖保羅天主教堂" }
-            ]
-        },
-        { 
-            date: "2026-03-04", day: "DAY 4", week: "三",
-            items: [
-                { title: "🏨 轉場東京", content: "輕井澤 → 東京站 (唐草飯店入住)" },
-                { title: "🦐 上野 Ueno", content: "阿美橫町 / 二木菓子 / 泳衣店" },
-                { title: "💎 銀座 Ginza", content: "吉伊卡哇 / UNIQLO旗艦店 / OK超市" }
-            ]
-        },
-        { 
-            date: "2026-03-05", day: "DAY 5", week: "四",
-            items: [
-                { title: "👨‍👩‍👧‍👦 爸媽行程", content: "KLOOK 富士山一日遊 (8:00-17:30)" },
-                { title: "🗼 新宿購物", content: "Disney Flagship / Alpen / 扭蛋之森" },
-                { title: "🏬 東京車站一番街", content: "17:30接爸媽 / 根室花丸壽司" }
-            ]
-        },
-        { 
-            date: "2026-03-06", day: "DAY 6", week: "五",
-            items: [
-                { title: "✈️ 歸途航班", content: "BR191 羽田(12:15) → 松山(15:05)" },
-                { title: "⏰ 提醒", content: "09:00 抵達機場" }
-            ]
-        }
-    ];
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxktADedYUP_K5X8S0aJ-f0XKGjev2qOuNZi1LNN7E5vq1b26KA-71Oc1IZnR1drgYfdg/exec";
+    let allData = [];
 
-    let currentActiveDay = 0;
-
-    // 初始化頁面
-    function init() {
-        renderSelectors();
-        renderContent();
-        autoSelectToday();
+    async function fetchSchedule() {
+        if(localStorage.getItem('isLoggedIn') !== 'true') return location.href='index.html';
+        try {
+            const resp = await fetch(GAS_URL + "?type=schedule");
+            allData = await resp.json();
+            allData.sort((a, b) => (a.時間 > b.時間 ? 1 : -1));
+            document.getElementById('loading').style.display = 'none';
+            renderDates();
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}/${(today.getMonth()+1).toString().padStart(2,'0')}/${today.getDate().toString().padStart(2,'0')}`;
+            const dates = [...new Set(allData.map(d => d.日期))];
+            showDay(dates.includes(dateStr) ? dateStr : dates[0]);
+        } catch(e) { document.getElementById('loading').innerText = "讀取失敗"; }
     }
 
-    // 生成日期方塊
-    function renderSelectors() {
-        const selector = document.getElementById('dateSelector');
-        selector.innerHTML = tripData.map((d, index) => `
-            <div class="date-box" id="btn-${index}" onclick="switchDay(${index})">
-                <div>3/${index + 1} (${d.week})</div>
-                <div>${d.day}</div>
-            </div>
-        `).join('');
+    function renderDates() {
+        const dates = [...new Set(allData.map(d => d.日期))];
+        document.getElementById('dateSelector').innerHTML = dates.map((d, i) => {
+            const dateObj = new Date(d);
+            return `<div class="date-box" id="btn-${d.replace(/\//g,'')}" onclick="showDay('${d}', this)">
+                <div style="font-size:11px">${dateObj.getMonth()+1}/${dateObj.getDate()}</div>
+                <div>D${i+1}</div>
+            </div>`;
+        }).join('');
     }
 
-    // 生成內容卡片
-    function renderContent() {
-        const container = document.getElementById('scheduleContainer');
-        container.innerHTML = tripData.map((d, index) => `
-            <div class="day-content" id="content-${index}">
-                ${d.items.map((item, i) => `
-                    <div class="card">
-                        <button class="del-btn" onclick="removeItem(${index}, ${i})">刪除</button>
-                        <h4>${item.title}</h4>
-                        <div class="info-row">${item.content}</div>
-                    </div>
-                `).join('')}
-            </div>
-        `).join('');
-    }
-
-    // 切換天數
-    function switchDay(index) {
+    function showDay(targetDate, el) {
         document.querySelectorAll('.date-box').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.day-content').forEach(c => c.classList.remove('active'));
-        
-        document.getElementById(`btn-${index}`).classList.add('active');
-        document.getElementById(`content-${index}`).classList.add('active');
-        currentActiveDay = index;
-
-        // 自動捲動日期欄位
-        document.getElementById(`btn-${index}`).scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        const activeBtn = el || document.getElementById(`btn-${targetDate.replace(/\//g,'')}`);
+        if(activeBtn) activeBtn.classList.add('active');
+        const filtered = allData.filter(d => d.日期 === targetDate);
+        document.getElementById('scheduleContainer').innerHTML = filtered.map(item => `
+            <div class="timeline-item"><div class="timeline-dot"></div>
+                <div class="card">
+                    <div class="time-label">🕙 ${item.時間}</div>
+                    <h4>${item.標題}</h4>
+                    <div class="card-content">${item.內容}</div>
+                </div>
+            </div>`).join('');
     }
-
-    // 自動偵測今天
-    function autoSelectToday() {
-        const today = new Date();
-        const dateStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
-        const index = tripData.findIndex(d => d.date === dateStr);
-        
-        if (index !== -1) switchDay(index);
-        else switchDay(0); // 沒對到日期就預設 Day 1
-    }
-
-    // 新增行程 (動態)
-    function addNewItem() {
-        const title = prompt("輸入行程標題 (例: 🏮 宵夜時段)");
-        const content = prompt("輸入詳細內容");
-        if (title && content) {
-            tripData[currentActiveDay].items.push({ title, content });
-            renderContent();
-            switchDay(currentActiveDay);
-        }
-    }
-
-    // 移除行程
-    function removeItem(dayIdx, itemIdx) {
-        if(confirm("確定要刪除這項行程嗎？")) {
-            tripData[dayIdx].items.splice(itemIdx, 1);
-            renderContent();
-            switchDay(currentActiveDay);
-        }
-    }
-
-    init();
+    fetchSchedule();
 </script>
-
 </body>
 </html>
