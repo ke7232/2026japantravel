@@ -9,48 +9,37 @@
         body { font-family: "PingFang TC", sans-serif; background: #f0f8ff; margin: 0; display: flex; justify-content: center; }
         .app-container { width: 100%; max-width: 500px; background: white; min-height: 100vh; position: relative; }
         
-        /* 登入遮罩 */
+        /* 修正點：登入遮罩 */
         #login-overlay { 
             position: fixed; inset: 0; background: #fff; z-index: 9999; 
-            display: none; flex-direction: column; align-items: center; justify-content: center; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            transition: opacity 0.5s ease, visibility 0.5s ease; 
+        }
+        /* 當登入成功時，這會被 JS 觸發 */
+        #login-overlay.hide { 
+            opacity: 0; 
+            visibility: hidden; 
+            pointer-events: none; 
         }
         
         header { display: flex; justify-content: space-between; align-items: center; padding: 25px 20px; background: white; border-bottom: 1px solid #f9f9f9; position: relative; }
         .logo { font-size: 20px; font-weight: bold; }
-        
-        /* 選單容器 */
         .menu-wrapper { position: relative; z-index: 1000; }
-        .menu-icon { 
-            width: 40px; height: 40px; background: #fff; border-radius: 50%; 
-            box-shadow: 0 3px 8px rgba(0,0,0,0.1); display: flex; align-items: center; 
-            justify-content: center; cursor: pointer; border: 1px solid #f0f0f0;
-        }
-        .menu-icon svg { pointer-events: none; } /* 防止點擊到 SVG 本體 */
-
-        /* 下拉選單樣式 */
-        .menu-dropdown { 
-            display: none; position: absolute; top: 55px; right: 0; 
-            background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
-            border-radius: 15px; min-width: 160px; border: 1px solid #f0faff; overflow: hidden; 
-        }
+        .menu-icon { width: 40px; height: 40px; background: #fff; border-radius: 50%; box-shadow: 0 3px 8px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid #f0f0f0; }
+        .menu-dropdown { display: none; position: absolute; top: 55px; right: 0; background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-radius: 15px; min-width: 160px; border: 1px solid #f0faff; overflow: hidden; }
         .menu-dropdown.show { display: block; animation: popIn 0.2s ease; }
         .menu-item { padding: 15px 18px; border-bottom: 1px solid #f9f9f9; font-size: 15px; cursor: pointer; text-decoration: none; color: #444; display: block; }
-        .menu-item:hover { background: #f0faff; }
 
         .content { padding: 0 20px 50px; }
         h3 { color: #bbb; font-size: 14px; margin: 25px 0 10px; }
-        
         .cat-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .selection-btn { background: #fff; border: 2px solid #f4f8fb; padding: 15px 5px; border-radius: 20px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .selection-btn { background: #fff; border: 2px solid #f4f8fb; padding: 15px 5px; border-radius: 20px; text-align: center; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
         .selection-btn.active { border-color: var(--primary); background: #f0faff; color: var(--primary); font-weight: bold; }
-        
         .user-group { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         .user-btn { background: #fff; border: 2px solid #f0f0f0; padding: 12px 0; border-radius: 50px; font-size: 13px; text-align: center; cursor: pointer; }
         .user-btn.active { border-color: var(--secondary); background: #fffdeb; color: #b48a00; font-weight: bold; }
-        
         .input-box { width: 100%; padding: 16px; margin-bottom: 12px; border: 2px solid #f0f4f8; border-radius: 20px; box-sizing: border-box; font-size: 16px; text-align: center; outline: none; background: #fafcfe; }
         .submit-btn { width: 100%; padding: 18px; background: linear-gradient(135deg, #76c7ff, #5da9e9); color: white; border: none; border-radius: 30px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        
         @keyframes popIn { from { opacity:0; transform: translateY(-10px); } to { opacity:1; transform: translateY(0); } }
     </style>
 </head>
@@ -95,58 +84,4 @@
         <div class="user-group">
             <div class="user-btn active" onclick="selectUser(this, '航')">航</div>
             <div class="user-btn" onclick="selectUser(this, '安')">安</div>
-            <div class="user-btn" onclick="selectUser(this, '香')">香</div>
-            <div class="user-btn" onclick="selectUser(this, '瑩')">瑩</div>
-            <div class="user-btn" onclick="selectUser(this, '廷')">廷</div>
-        </div>
-        <button id="send-btn" class="submit-btn" style="margin-top: 30px;" onclick="submitData()">完成並存檔 ✨</button>
-        <p id="status" style="text-align: center; margin-top: 15px; font-weight: bold;"></p>
-    </div>
-</div>
-
-<script>
-    // 1. 立即執行：登入檢查
-    (function() {
-        const isLoggedIn = localStorage.getItem('isLoggedIn');
-        const overlay = document.getElementById('login-overlay');
-        if (isLoggedIn === 'true') {
-            overlay.style.display = 'none';
-        } else {
-            overlay.style.display = 'flex';
-        }
-    })();
-
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxktADedYUP_K5X8S0aJ-f0XKGjev2qOuNZi1LNN7E5vq1b26KA-71Oc1IZnR1drgYfdg/exec"; 
-    let currentCat = "食", currentUser = "航";
-
-    // 2. 登入函式
-    function handleLogin() {
-        const pass = document.getElementById('passInput').value;
-        if(pass === '1234') {
-            localStorage.setItem('isLoggedIn', 'true');
-            document.getElementById('login-overlay').style.display = 'none';
-        } else {
-            alert('密碼錯誤！');
-        }
-    }
-
-    // 3. 選單開關修復 (核心修改處)
-    window.addEventListener('DOMContentLoaded', () => {
-        const menuToggle = document.getElementById('menuToggle');
-        const menu = document.getElementById('menu');
-
-        if(menuToggle && menu) {
-            menuToggle.onclick = function(e) {
-                e.stopPropagation();
-                menu.classList.toggle('show');
-            };
-        }
-
-        document.onclick = function(e) {
-            if(menu && menu.classList.contains('show')) {
-                menu.classList.remove('show');
-            }
-        };
-    });
-
-    // 4. 計帳功能
+            <div class="user-btn
