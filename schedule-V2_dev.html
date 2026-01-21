@@ -24,41 +24,45 @@
         .hour-axis { width: 0; flex-shrink: 0; overflow: hidden; }
         body.edit-mode .hour-axis { width: 40px; border-right: 1px solid #eee; }
 
-        .axis-label { 
-            height: calc(var(--slot-h) * 4);
-            display: flex; align-items: flex-start; justify-content: center;
-            font-size: 11px; color: #bbb; padding-top: 5px;
-        }
+        .axis-label { height: calc(var(--slot-h) * 4); display: flex; align-items: flex-start; justify-content: center; font-size: 11px; color: #bbb; padding-top: 5px; }
 
         .drop-zone { flex-grow: 1; position: relative; }
         body.edit-mode .drop-zone { background-image: linear-gradient(#e0e0e0 1px, transparent 1px); background-size: 100% var(--slot-h); min-height: 2200px; }
 
+        /* 行程卡片基礎樣式 */
         .event-card {
             background: white; border-radius: 16px; padding: 15px;
             box-shadow: 0 3px 10px rgba(0,0,0,0.05); border-left: 6px solid var(--primary);
-            position: relative; margin-bottom: 10px; transition: transform 0.2s, box-shadow 0.2s;
+            position: relative; margin-bottom: 10px; transition: all 0.3s ease;
         }
 
-        /* 2. 長按啟動時的 Active 動作 */
-        .event-card.is-active { transform: scale(1.03); box-shadow: 0 10px 25px rgba(0,0,0,0.15); border-left-color: var(--danger); }
+        /* 長按中的過渡效果：讓 user 知道正在解鎖 */
+        .event-card:active { border-left-color: #ffd7d7; }
+        
+        /* 成功解鎖 3 秒後的狀態 */
+        .event-card.is-active { 
+            transform: scale(1.05); 
+            box-shadow: 0 12px 30px rgba(0,0,0,0.2); 
+            border-left-color: var(--danger) !important;
+            z-index: 3500;
+        }
 
         body.dragging .event-card:not(.is-dragging) { position: absolute !important; opacity: 0.4; filter: grayscale(0.5); z-index: 1; width: 80%; border: 1px dashed var(--primary); }
 
         .event-card.is-dragging {
-            position: absolute !important; width: 85%; margin: 0 !important; z-index: 3000; pointer-events: none;
+            position: absolute !important; width: 85%; margin: 0 !important; z-index: 4000; pointer-events: none;
             box-shadow: 0 15px 40px rgba(0,0,0,0.2); border-left-color: var(--danger);
         }
 
         .card-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 12px; opacity: 0.3; }
-        .card-content { font-size: 14px; color: #666; white-space: pre-wrap; margin-top: 8px; }
-        
+        .card-content { font-size: 14px; color: #666; white-space: pre-wrap; margin-top: 8px; line-height: 1.5; }
+        .map-link { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; padding: 6px 12px; background: #e8f5e9; color: #2e7d32; border-radius: 10px; font-size: 12px; text-decoration: none; font-weight: bold; }
+
         .drag-pointer { position: absolute; left: -14px; top: 0; width: 0; height: 0; border-top: 6px solid transparent; border-bottom: 6px solid transparent; border-right: 10px solid var(--danger); display: none; }
         .is-dragging .drag-pointer { display: block; }
         .drag-tooltip { position: absolute; top: -35px; left: 0; background: var(--danger); color: white; padding: 3px 8px; border-radius: 6px; font-weight: bold; font-size: 12px; display: none; }
         .is-dragging .drag-tooltip { display: block; }
 
-        .add-fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; border: none; box-shadow: 0 8px 20px rgba(118,199,255,0.4); z-index: 2500; cursor: pointer; }
-        body.edit-mode .add-fab { display: none; }
         #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 30px; font-size: 12px; display: none; z-index: 5000; }
     </style>
 </head>
@@ -79,8 +83,6 @@
     <div class="drop-zone" id="dropZone"></div>
 </div>
 
-<button class="add-fab" onclick="">＋</button>
-
 <div id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
@@ -92,7 +94,7 @@
     function updateVersionTag() {
         const now = new Date();
         const ver = `${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
-        document.getElementById('ver-stamp').innerText = Ver. ${ver};
+        document.getElementById('ver-stamp').innerText = `Ver. ${ver}`;
     }
 
     function toggleEditMode() {
@@ -102,7 +104,7 @@
             btn.innerText = "🔒 完成位置"; btn.classList.add('active');
             document.body.classList.add('edit-mode');
             renderTimeline(); 
-            showToast("👆 長按行程 1 秒可開始搬移");
+            showToast("👆 請按住行程 3 秒鐘不放以進行搬移");
         } else {
             btn.innerText = "🔓 調整位置"; btn.classList.remove('active');
             document.body.classList.remove('edit-mode');
@@ -111,10 +113,12 @@
     }
 
     async function loadData() {
-        const r = await fetch(GAS_URL + "?type=schedule");
-        allData = await r.json();
-        renderDates();
-        renderTimeline(true); // 首次載入執行自動對焦
+        try {
+            const r = await fetch(GAS_URL + "?type=schedule");
+            allData = await r.json();
+            renderDates();
+            renderTimeline(true);
+        } catch(e) { showToast("❌ 資料載入失敗"); }
     }
 
     function renderDates() {
@@ -146,14 +150,16 @@
             const [h, m] = item.時間.split(':').map(Number);
             card.dataset.originTop = (h * 60 + m) / 15 * SLOT_PX;
             
+            const keyword = item["Google map keyword"] || "";
+            const mapHtml = keyword ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(keyword)}" class="map-link" target="_blank">📍 導覽地圖</a>` : "";
+
             card.innerHTML = `
                 <div class="drag-pointer"></div><div class="drag-tooltip"></div>
-                <div class="card-actions">
-                    <span style="font-size:16px;">✏️</span>
-                </div>
+                <div class="card-actions"><span style="font-size:16px;">✏️</span></div>
                 <span style="font-size:12px; color:var(--primary); font-weight:800;">🕙 ${item.時間}</span>
                 <h4 style="margin:5px 0">${item.標題}</h4>
                 <div class="card-content">${item.內容 || ''}</div>
+                ${mapHtml}
             `;
             zone.appendChild(card);
             if(isEditMode) {
@@ -162,27 +168,22 @@
             }
         });
 
-        // 1. 自動捲動邏輯
-        if (autoFocus) {
+        if (autoFocus && dayData.length > 0) {
             setTimeout(() => {
                 const now = new Date();
                 const currentMins = now.getHours() * 60 + now.getMinutes();
                 const scrollY = (currentMins / 15 * SLOT_PX);
-                
-                // 如果當前時間點已經在第一個行程之後，才執行捲動
-                const firstItemMins = dayData.length > 0 ? parseInt(dayData[0].時間.split(':')[0]) * 60 : 0;
+                const firstItemMins = parseInt(dayData[0].時間.split(':')[0]) * 60;
                 if (currentMins > firstItemMins) {
-                    window.scrollTo({ top: scrollY + 50, behavior: 'smooth' });
-                    showToast(`📍 已對焦至現在時間 ${now.getHours()}:${now.getMinutes()}`);
+                    window.scrollTo({ top: scrollY - 100, behavior: 'smooth' });
                 }
-            }, 300);
+            }, 500);
         }
     }
 
     function setupDrag(el, item) {
         interact(el).draggable({
-            // 2. 核心：長按 1000ms 才啟動拖拽
-            hold: 1000, 
+            hold: 3000, // 核心：長按 3 秒觸發
             listeners: {
                 start(event) {
                     document.body.classList.add('dragging');
@@ -199,17 +200,18 @@
                     target.style.top = newTop + "px";
                     const snappedTop = Math.round(newTop / SLOT_PX) * SLOT_PX;
                     const totalMins = (snappedTop / SLOT_PX) * 15;
-                    target.querySelector('.drag-tooltip').innerText = ${String(Math.floor(totalMins/60)).padStart(2,'0')}:${String(totalMins%60).padStart(2,'0')};
+                    target.querySelector('.drag-tooltip').innerText = `${String(Math.floor(totalMins/60)).padStart(2,'0')}:${String(totalMins%60).padStart(2,'0')}`;
                 },
                 async end(event) {
                     const target = event.target;
-                    target.classList.remove('is-active');
+                    target.classList.remove('is-active', 'is-dragging');
+                    document.body.classList.remove('dragging');
                     if (event.clientY < 60) { renderTimeline(); return; }
                     const snappedTop = Math.round(parseFloat(target.style.top) / SLOT_PX) * SLOT_PX;
                     const totalMins = (snappedTop / SLOT_PX) * 15;
-                    const newTime = ${String(Math.floor(totalMins/60)).padStart(2,'0')}:${String(totalMins%60).padStart(2,'0')};
+                    const newTime = `${String(Math.floor(totalMins/60)).padStart(2,'0')}:${String(totalMins%60).padStart(2,'0')}`;
                     if (newTime !== item.時間) {
-                        showToast(🚀 同步至 ${newTime}...);
+                        showToast(`🚀 同步至 ${newTime}...`);
                         await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "edit", date: currentDay, oldTime: item.時間, oldTitle: item.標題, time: newTime, title: item.標題, content: item.內容 })});
                         setTimeout(loadData, 1000);
                     } else { renderTimeline(); }
@@ -218,7 +220,7 @@
         });
     }
 
-    function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2500); }
+    function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
     window.onload = () => { updateVersionTag(); loadData(); };
 </script>
 </body>
