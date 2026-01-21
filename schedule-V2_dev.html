@@ -10,8 +10,12 @@
             --slot-h: 32px; --danger: #ff7675;
         }
         body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; overflow-x: hidden; scroll-behavior: smooth; }
-        header { background: white; padding: 12px 20px; display: flex; align-items: center; box-shadow: 0 1px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 2000; }
+        header { background: white; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 2000; }
         .version-tag { font-size: 10px; color: #ff7675; font-weight: bold; margin-left: 8px; border: 1px solid #ff7675; padding: 2px 5px; border-radius: 4px; }
+
+        /* 模式切換按鈕樣式 */
+        .mode-toggle { padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; border: 1px solid var(--primary); background: white; color: var(--primary); cursor: pointer; transition: 0.3s; }
+        .mode-toggle.active { background: var(--danger); color: white; border-color: var(--danger); }
 
         #cancel-dropzone {
             position: fixed; top: -60px; left: 0; width: 100%; height: 60px;
@@ -26,7 +30,7 @@
 
         .timeline-container { display: flex; padding: 10px 5px; position: relative; }
         .hour-axis { width: 0; flex-shrink: 0; overflow: hidden; }
-        body.dragging .hour-axis { width: 40px; border-right: 1px solid #eee; }
+        body.edit-mode .hour-axis { width: 40px; border-right: 1px solid #eee; }
 
         .axis-label { 
             height: calc(var(--slot-h) * 4);
@@ -35,21 +39,22 @@
         }
 
         .drop-zone { flex-grow: 1; position: relative; }
-        body.dragging .drop-zone {
+        /* 當開啟編輯模式時，背景顯示微弱網格 */
+        body.edit-mode .drop-zone {
             background-image: linear-gradient(#e0e0e0 1px, transparent 1px);
             background-size: 100% var(--slot-h);
             min-height: 2200px;
         }
 
-        /* 行程卡片佈局 */
         .event-card {
             background: white; border-radius: 16px; padding: 15px;
             box-shadow: 0 3px 10px rgba(0,0,0,0.05); border-left: 6px solid var(--primary);
             position: relative; margin-bottom: 10px;
-            cursor: grab; touch-action: none;
+            cursor: default; touch-action: pan-y;
         }
+        /* 編輯模式下才顯示可抓取的游標 */
+        body.edit-mode .event-card { cursor: grab; touch-action: none; }
 
-        /* 拖拽模式下的視覺調整 */
         body.dragging .event-card:not(.is-dragging) { 
             position: absolute !important;
             opacity: 0.4; 
@@ -65,12 +70,10 @@
             box-shadow: 0 15px 40px rgba(0,0,0,0.2); border-left-color: var(--danger);
         }
 
-        /* CRUD 按鈕樣式 */
         .card-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 12px; opacity: 0.3; transition: 0.3s; }
         .event-card:hover .card-actions { opacity: 1; }
         .action-icon { font-size: 18px; cursor: pointer; }
 
-        /* 地圖按鈕 */
         .map-link { 
             display: inline-flex; align-items: center; gap: 5px; 
             margin-top: 10px; padding: 6px 12px; background: #e8f5e9; 
@@ -78,7 +81,6 @@
             text-decoration: none; font-weight: bold;
         }
 
-        /* 指針與 Tooltip */
         .drag-pointer {
             position: absolute; left: -14px; top: 0;
             width: 0; height: 0; 
@@ -93,7 +95,6 @@
         }
         .is-dragging .drag-tooltip { display: block; }
 
-        /* Modal & FAB */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .modal { width: 88%; max-width: 360px; background: white; border-radius: 30px; padding: 25px; box-sizing: border-box; }
         .add-fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; border: none; box-shadow: 0 8px 20px rgba(118,199,255,0.4); z-index: 2500; cursor: pointer; }
@@ -108,8 +109,11 @@
 <div id="cancel-dropzone">❌ 放到此處取消變更</div>
 
 <header>
-    <div onclick="location.href='index.html'" style="margin-right:15px; cursor:pointer;"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#76c7ff" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
-    <b style="font-size: 18px;">📅 每日行程 (DEV) <span id="ver-stamp" class="version-tag"></span></b>
+    <div style="display:flex; align-items:center;">
+        <div onclick="location.href='index.html'" style="margin-right:10px; cursor:pointer;"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#76c7ff" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+        <b style="font-size: 16px;">每日行程 <span id="ver-stamp" class="version-tag"></span></b>
+    </div>
+    <button id="toggleBtn" class="mode-toggle" onclick="toggleEditMode()">🔓 調整位置</button>
 </header>
 
 <div class="date-selector" id="dateSelector"></div>
@@ -153,6 +157,35 @@
         document.getElementById('ver-stamp').innerText = `Ver. ${ver}`;
     }
 
+    // 模式切換邏輯
+    function toggleEditMode() {
+        const btn = document.getElementById('toggleBtn');
+        isEditMode = !isEditMode;
+        
+        if(isEditMode) {
+            btn.innerText = "🔒 完成位置";
+            btn.classList.add('active');
+            document.body.classList.add('edit-mode');
+            showToast("✨ 已開啟調整模式，可拖動行程卡片");
+            initHourAxis();
+            refreshDraggables(); // 啟動拖拽
+        } else {
+            btn.innerText = "🔓 調整位置";
+            btn.classList.remove('active');
+            document.body.classList.remove('edit-mode');
+            renderTimeline(); // 刷回一般縮排模式
+        }
+    }
+
+    function initHourAxis() {
+        const axis = document.getElementById('hourAxis');
+        axis.innerHTML = '';
+        for(let i=0; i<24; i++) {
+            const lbl = document.createElement('div'); lbl.className = 'axis-label';
+            lbl.innerText = String(i).padStart(2,'0'); axis.appendChild(lbl);
+        }
+    }
+
     const hS = document.getElementById('fHour'), mS = document.getElementById('fMin');
     for(let h=0; h<24; h++) hS.add(new Option(String(h).padStart(2,'0')+'時', String(h).padStart(2,'0')));
     ['00','15','30','45'].forEach(m => mS.add(new Option(m+'分', m)));
@@ -176,6 +209,9 @@
         const axis = document.getElementById('hourAxis');
         zone.innerHTML = ''; axis.innerHTML = '';
         document.body.classList.remove('dragging');
+        
+        // 渲染前先清除所有 interact 實例
+        interact('.event-card').unset();
 
         const dayData = allData.filter(item => (item.日期 || "").replace(/-/g, '/') === currentDay).sort((a,b) => a.時間.localeCompare(b.時間));
 
@@ -186,8 +222,8 @@
             card.dataset.originTop = (h * 60 + m) / 15 * SLOT_PX;
             
             const keyword = item["Google map keyword"] || "";
-            const mapHtml = keyword ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(keyword)}" class="map-link" target="_blank">📍 查看地圖導覽</a>` : "";
-            const safeItem = JSON.stringify(item).replace(/"/g, '&quot;');
+            const mapHtml = keyword ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(keyword)}" class="map-link" target="_blank">📍 導覽地圖</a>` : "";
+            const safeItem = JSON.stringify(item).replace(/"/g, '"');
 
             card.innerHTML = `
                 <div class="drag-pointer"></div>
@@ -202,6 +238,14 @@
                 ${mapHtml}
             `;
             zone.appendChild(card);
+            if(isEditMode) setupDrag(card, item);
+        });
+    }
+
+    function refreshDraggables() {
+        const cards = document.querySelectorAll('.event-card');
+        cards.forEach(card => {
+            const item = JSON.parse(card.querySelector('.action-icon').getAttribute('onclick').match(/\{.*\}/)[0]);
             setupDrag(card, item);
         });
     }
@@ -210,15 +254,11 @@
         interact(el).draggable({
             listeners: {
                 start(event) {
+                    if(!isEditMode) return; // 保護機制
                     const target = event.target;
-                    const axis = document.getElementById('hourAxis');
                     document.body.classList.add('dragging');
                     target.classList.add('is-dragging');
-                    axis.innerHTML = '';
-                    for(let i=0; i<24; i++) {
-                        const lbl = document.createElement('div'); lbl.className = 'axis-label';
-                        lbl.innerText = String(i).padStart(2,'0'); axis.appendChild(lbl);
-                    }
+                    
                     document.querySelectorAll('.event-card:not(.is-dragging)').forEach(c => {
                         c.style.top = c.dataset.originTop + "px";
                     });
@@ -259,10 +299,11 @@
         });
     }
 
+    // Modal 與其他 CRUD 邏輯 (同前，略)
     function openModal(mode, item = null) {
-        isEditMode = (mode === 'edit');
-        document.getElementById('modalTitle').innerText = isEditMode ? "編輯行程 ✏️" : "新增行程 📝";
-        if (isEditMode && item) {
+        isEditModeOnModal = (mode === 'edit');
+        document.getElementById('modalTitle').innerText = isEditModeOnModal ? "編輯行程 ✏️" : "新增行程 📝";
+        if (isEditModeOnModal && item) {
             document.getElementById('fTitle').value = item.標題;
             document.getElementById('fContent').value = item.內容;
             document.getElementById('fKeyword').value = item["Google map keyword"] || "";
@@ -275,26 +316,21 @@
         }
         document.getElementById('modal-overlay').style.display = 'flex';
     }
-
     function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
-
     async function submitForm() {
-        const payload = { action: isEditMode ? "edit" : "add", date: currentDay, time: `${document.getElementById('fHour').value}:${document.getElementById('fMin').value}`, title: document.getElementById('fTitle').value, content: document.getElementById('fContent').value, keyword: document.getElementById('fKeyword').value };
-        if (isEditMode) { const old = JSON.parse(document.getElementById('oldDataKey').value); payload.oldTime = old.oldTime; payload.oldTitle = old.oldTitle; }
+        const payload = { action: (document.getElementById('oldDataKey').value ? "edit" : "add"), date: currentDay, time: `${document.getElementById('fHour').value}:${document.getElementById('fMin').value}`, title: document.getElementById('fTitle').value, content: document.getElementById('fContent').value, keyword: document.getElementById('fKeyword').value };
+        if (payload.action === 'edit') { const old = JSON.parse(document.getElementById('oldDataKey').value); payload.oldTime = old.oldTime; payload.oldTitle = old.oldTitle; }
         closeModal(); showToast("⏳ 正在儲存...");
         await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
         setTimeout(loadData, 1000);
     }
-
     async function handleDelete(time, title) {
         if(!confirm("確定要刪除嗎？")) return;
         showToast("🗑️ 正在刪除...");
         await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({action:"delete", date:currentDay, time, title}) });
         setTimeout(loadData, 1000);
     }
-
     function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2500); }
-    
     window.onload = () => { updateVersionTag(); loadData(); };
 </script>
 </body>
