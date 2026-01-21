@@ -24,12 +24,10 @@
         .hour-axis { width: 0; flex-shrink: 0; overflow: hidden; }
         body.edit-mode .hour-axis { width: 45px; border-right: 1px solid #eee; }
         
-        /* 1. 時間軸文字顏色加深並加粗 */
         .axis-label { 
             height: calc(var(--slot-h) * 4); 
             display: flex; align-items: flex-start; justify-content: center;
-            font-size: 12px; color: #555; /* 深灰色 */
-            font-weight: 800; /* 加粗 */
+            font-size: 12px; color: #555; font-weight: 800;
             padding-top: 5px; border-bottom: 1px dashed #eee; box-sizing: border-box; 
         }
 
@@ -45,10 +43,11 @@
         body.edit-mode .card-detail, body.edit-mode .card-actions { display: none; }
         body.edit-mode .event-card { padding: 10px 15px; }
 
+        /* 倒數進度條：改為 2 秒 */
         .unlock-bar-bg { position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: #eee; border-radius: 0 0 16px 16px; display: none; overflow: hidden; }
         .unlock-bar-fill { width: 0%; height: 100%; background: var(--danger); }
         .is-holding .unlock-bar-bg { display: block; }
-        .is-holding .unlock-bar-fill { animation: fillProgress 3s linear forwards; }
+        .is-holding .unlock-bar-fill { animation: fillProgress 2s linear forwards; }
         @keyframes fillProgress { from { width: 0%; } to { width: 100%; } }
 
         .event-card.is-active { transform: scale(1.05); box-shadow: 0 12px 30px rgba(0,0,0,0.2); border-left-color: var(--danger) !important; z-index: 3500; }
@@ -79,7 +78,7 @@
 <header>
     <div style="display:flex; align-items:center;">
         <div onclick="location.href='index.html'" style="margin-right:10px; cursor:pointer;"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#76c7ff" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
-        <b style="font-size: 16px;">每日行程 (DEV) <span class="version-tag">Ver. 0121-1740</span></b>
+        <b style="font-size: 16px;">每日行程 (DEV) <span class="version-tag">Ver. 0121-1755</span></b>
     </div>
     <button id="toggleBtn" class="mode-toggle" onclick="toggleEditMode()">調整位置</button>
 </header>
@@ -126,7 +125,7 @@
     function toggleEditMode() {
         isEditMode = !isEditMode;
         const btn = document.getElementById('toggleBtn');
-        if(isEditMode) { btn.innerText = "完成位置"; btn.classList.add('active'); document.body.classList.add('edit-mode'); showToast("⏳ 調整模式：按住行程 3 秒搬移"); }
+        if(isEditMode) { btn.innerText = "完成位置"; btn.classList.add('active'); document.body.classList.add('edit-mode'); showToast("⏳ 調整模式：按住行程 2 秒搬移"); }
         else { btn.innerText = "調整位置"; btn.classList.remove('active'); document.body.classList.remove('edit-mode'); }
         renderTimeline();
     }
@@ -163,7 +162,6 @@
             const card = document.createElement('div');
             card.className = 'event-card';
             const [h, m] = item.時間.split(':').map(Number);
-            // 修正 2：精確分鐘網格計算
             card.dataset.originTop = ((h * 60 + m) / 15) * SLOT_PX;
             
             const keyword = item["Google map keyword"] || "";
@@ -206,7 +204,7 @@
 
     function setupDrag(el, item) {
         interact(el).draggable({
-            hold: 3000, 
+            hold: 2000, // 修改為 2 秒
             listeners: {
                 start(event) {
                     document.body.classList.add('dragging');
@@ -253,6 +251,9 @@
         } else {
             document.getElementById('fTitle').value = ""; document.getElementById('fContent').value = "";
             document.getElementById('fKeyword').value = ""; document.getElementById('oldDataKey').value = "";
+            // 預設 10:00
+            document.getElementById('fHour').value = "10";
+            document.getElementById('fMin').value = "00";
         }
         document.getElementById('modal-overlay').style.display = 'flex';
     }
