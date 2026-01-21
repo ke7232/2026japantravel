@@ -17,13 +17,21 @@
         .mode-toggle.active { background: var(--danger); color: white; border-color: var(--danger); }
 
         .date-selector { display: flex; overflow-x: auto; padding: 10px; gap: 8px; background: white; border-bottom: 1px solid #eee; position: sticky; top: 48px; z-index: 1999; scrollbar-width: none; }
-        .date-box { min-width: 50px; padding: 8px; background: #fff; border: 1px solid #eee; border-radius: 12px; text-align: center; font-size: 12px; flex-shrink: 0; cursor: pointer; }
+        .date-box { min-width: 50px; padding: 8px; background: #fff; border: 1px solid #eee; border-radius: 12px; text-align: center; font-size: 12px; }
         .date-box.active { background: var(--primary); color: white; border-color: var(--primary); }
 
         .timeline-container { display: flex; padding: 10px 5px; position: relative; }
         .hour-axis { width: 0; flex-shrink: 0; overflow: hidden; }
-        body.edit-mode .hour-axis { width: 40px; border-right: 1px solid #eee; }
-        .axis-label { height: calc(var(--slot-h) * 4); display: flex; align-items: flex-start; justify-content: center; font-size: 11px; color: #bbb; padding-top: 5px; border-bottom: 1px dashed #f0f0f0; box-sizing: border-box; }
+        body.edit-mode .hour-axis { width: 45px; border-right: 1px solid #eee; }
+        
+        /* 1. 時間軸文字顏色加深並加粗 */
+        .axis-label { 
+            height: calc(var(--slot-h) * 4); 
+            display: flex; align-items: flex-start; justify-content: center;
+            font-size: 12px; color: #555; /* 深灰色 */
+            font-weight: 800; /* 加粗 */
+            padding-top: 5px; border-bottom: 1px dashed #eee; box-sizing: border-box; 
+        }
 
         .drop-zone { flex-grow: 1; position: relative; }
         body.edit-mode .drop-zone { background-image: linear-gradient(#e0e0e0 1px, transparent 1px); background-size: 100% var(--slot-h); min-height: 2200px; }
@@ -34,11 +42,9 @@
             position: relative; margin-bottom: 10px; transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        /* 智慧顯示邏輯 */
         body.edit-mode .card-detail, body.edit-mode .card-actions { display: none; }
         body.edit-mode .event-card { padding: 10px 15px; }
 
-        /* 倒數進度條 */
         .unlock-bar-bg { position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: #eee; border-radius: 0 0 16px 16px; display: none; overflow: hidden; }
         .unlock-bar-fill { width: 0%; height: 100%; background: var(--danger); }
         .is-holding .unlock-bar-bg { display: block; }
@@ -46,7 +52,7 @@
         @keyframes fillProgress { from { width: 0%; } to { width: 100%; } }
 
         .event-card.is-active { transform: scale(1.05); box-shadow: 0 12px 30px rgba(0,0,0,0.2); border-left-color: var(--danger) !important; z-index: 3500; }
-        body.dragging .event-card:not(.is-dragging) { position: absolute !important; opacity: 0.4; filter: grayscale(0.5); z-index: 1; width: 80%; border: 1px dashed var(--primary); }
+        body.dragging .event-card:not(.is-dragging) { position: absolute !important; opacity: 0.45; filter: grayscale(0.5); z-index: 1; width: 80%; border: 1px dashed var(--primary); }
         .event-card.is-dragging { position: absolute !important; width: 85%; margin: 0 !important; z-index: 4000; pointer-events: none; box-shadow: 0 15px 40px rgba(0,0,0,0.2); border-left-color: var(--danger); }
 
         .card-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 12px; opacity: 0.3; }
@@ -73,7 +79,7 @@
 <header>
     <div style="display:flex; align-items:center;">
         <div onclick="location.href='index.html'" style="margin-right:10px; cursor:pointer;"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#76c7ff" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
-        <b style="font-size: 16px;">每日行程 (DEV) <span class="version-tag">Ver. 0121-1745</span></b>
+        <b style="font-size: 16px;">每日行程 (DEV) <span class="version-tag">Ver. 0121-1740</span></b>
     </div>
     <button id="toggleBtn" class="mode-toggle" onclick="toggleEditMode()">調整位置</button>
 </header>
@@ -156,8 +162,8 @@
         dayData.forEach((item) => {
             const card = document.createElement('div');
             card.className = 'event-card';
-            // 關鍵修正：精確分鐘網格計算
             const [h, m] = item.時間.split(':').map(Number);
+            // 修正 2：精確分鐘網格計算
             card.dataset.originTop = ((h * 60 + m) / 15) * SLOT_PX;
             
             const keyword = item["Google map keyword"] || "";
@@ -181,9 +187,7 @@
             zone.appendChild(card);
             
             if(isEditMode) {
-                card.style.position = 'absolute';
-                card.style.top = card.dataset.originTop + "px"; // 物理位置與網格同步
-                card.style.width = "calc(100% - 20px)";
+                card.style.position = 'absolute'; card.style.top = card.dataset.originTop + "px"; card.style.width = "calc(100% - 20px)";
                 setupDrag(card, item);
                 card.onpointerdown = () => card.classList.add('is-holding');
                 card.onpointerup = card.onpointerleave = () => card.classList.remove('is-holding');
@@ -205,10 +209,8 @@
             hold: 3000, 
             listeners: {
                 start(event) {
-                    const target = event.target;
-                    target.classList.remove('is-holding');
                     document.body.classList.add('dragging');
-                    target.classList.add('is-dragging', 'is-active');
+                    event.target.classList.add('is-dragging', 'is-active');
                     document.querySelectorAll('.event-card:not(.is-dragging)').forEach(c => c.style.top = c.dataset.originTop + "px");
                 },
                 move(event) {
@@ -219,7 +221,9 @@
                     target.style.top = newTop + "px";
                     const snappedTop = Math.round(newTop / SLOT_PX) * SLOT_PX;
                     const totalMins = (snappedTop / SLOT_PX) * 15;
-                    target.querySelector('.drag-tooltip').innerText = `${String(Math.floor(totalMins/60)).padStart(2,'0')}:${String(totalMins%60).padStart(2,'0')}`;
+                    const hh = Math.floor(totalMins / 60);
+                    const mm = totalMins % 60;
+                    target.querySelector('.drag-tooltip').innerText = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
                 },
                 async end(event) {
                     const target = event.target;
@@ -227,8 +231,8 @@
                     document.body.classList.remove('dragging');
                     const snappedTop = Math.round(parseFloat(target.style.top) / SLOT_PX) * SLOT_PX;
                     const totalMins = (snappedTop / SLOT_PX) * 15;
-                    const newTime = `${String(Math.floor(totalMins/60)).padStart(2,'0')}:${String(totalMins%60).padStart(2,'0')}`;
-                    if (newTime !== item.時間) {
+                    const newTime = `${String(Math.floor(totalMins / 60)).padStart(2,'0')}:${String(totalMins % 60).padStart(2,'0')}`;
+                    if (newTime !== item.時間 && totalMins < 1440) {
                         showToast(`🚀 同步至 ${newTime}...`);
                         await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "edit", date: currentDay, oldTime: item.時間, oldTitle: item.標題, time: newTime, title: item.標題, content: item.內容 })});
                         setTimeout(loadData, 1000);
