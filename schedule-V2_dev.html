@@ -7,11 +7,19 @@
     <style>
         :root { 
             --primary: #76c7ff; --bg: #f7f9fc;
-            --slot-h: 45px; 
+            --slot-h: 45px; --danger: #ff7675;
         }
         body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; overflow-x: hidden; }
         header { background: white; padding: 12px 20px; display: flex; align-items: center; box-shadow: 0 1px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 2000; }
         .version-tag { font-size: 10px; color: #aaa; font-weight: normal; margin-left: 5px; }
+
+        /* 手機端取消區域 */
+        #cancel-dropzone {
+            position: fixed; top: -60px; left: 0; width: 100%; height: 60px;
+            background: var(--danger); color: white; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; z-index: 2500; transition: 0.3s;
+        }
+        body.dragging #cancel-dropzone { top: 0; }
         
         .date-selector { display: flex; overflow-x: auto; padding: 10px; gap: 8px; background: white; border-bottom: 1px solid #eee; position: sticky; top: 48px; z-index: 1999; scrollbar-width: none; }
         .date-box { min-width: 55px; padding: 8px; background: #fff; border: 1px solid #eee; border-radius: 12px; text-align: center; cursor: pointer; font-size: 12px; flex-shrink: 0; }
@@ -19,7 +27,7 @@
 
         .timeline-container { display: flex; padding: 15px 5px; position: relative; min-height: 80vh; }
         .hour-axis { width: 35px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; color: #ccc; font-size: 11px; }
-        .axis-label { font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; }
+        .axis-label { font-weight: bold; margin-bottom: 10px; }
 
         .drop-zone { flex-grow: 1; position: relative; }
         .drop-zone.dragging-mode {
@@ -31,19 +39,23 @@
         .event-card {
             background: white; border-radius: 18px; padding: 15px; margin-bottom: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.04); border-left: 6px solid var(--primary);
-            position: relative; cursor: grab; z-index: 100; touch-action: none;
-        }
-        .event-card.is-dragging {
-            position: absolute !important; width: 85%; opacity: 0.8; z-index: 1000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15); pointer-events: none;
+            position: relative; cursor: grab; z-index: 100; touch-action: none; transition: opacity 0.3s, transform 0.2s;
         }
 
-        /* 拖拽時間預覽氣泡 */
+        /* 拖拽時其餘卡片變淡 */
+        body.dragging .event-card:not(.is-dragging) {
+            opacity: 0.3; border-left-color: #eee; box-shadow: none;
+        }
+
+        .event-card.is-dragging {
+            position: absolute !important; width: 85%; opacity: 0.9; z-index: 3000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); pointer-events: none; transform: scale(1.02);
+        }
+
         .drag-tooltip {
             position: absolute; top: -45px; left: 50%; transform: translateX(-50%);
             background: var(--primary); color: white; padding: 5px 12px;
-            border-radius: 10px; font-weight: bold; font-size: 14px;
-            box-shadow: 0 4px 10px rgba(118,199,255,0.5); display: none;
+            border-radius: 10px; font-weight: bold; font-size: 14px; display: none;
         }
         .is-dragging .drag-tooltip { display: block; }
 
@@ -52,13 +64,15 @@
         .event-card p { margin: 6px 0 0; font-size: 13px; color: #777; white-space: pre-wrap; line-height: 1.5; }
         .card-time-tag { font-size: 11px; color: var(--primary); font-weight: 800; display: block; margin-bottom: 4px; }
 
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .modal { width: 88%; max-width: 360px; background: white; border-radius: 30px; padding: 25px; box-sizing: border-box; }
         .add-fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; border: none; box-shadow: 0 8px 20px rgba(118,199,255,0.4); z-index: 2500; }
-        #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 30px; font-size: 12px; display: none; z-index: 4000; }
+        #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 30px; font-size: 12px; display: none; z-index: 5000; }
     </style>
 </head>
-<body>
+<body onkeydown="handleGlobalKey(event)">
+
+<div id="cancel-dropzone">🛑 拖拽中... (放至此處取消)</div>
 
 <header>
     <div onclick="location.href='index.html'" style="margin-right:15px; cursor:pointer;"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#76c7ff" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
@@ -99,11 +113,23 @@
     const GAS_URL = "https://script.google.com/macros/s/AKfycbz7lrfOtPmZH7fqUwbiRk3KgHAwZATgi51VSt2YqFamEinhdaxRvzqpMSrtUq7PsAK0bQ/exec";
     const SLOT_PX = 45;
     let allData = [], currentDay = "2026/03/01", isEditMode = false;
-    let minHour = 8; // 動態起始小時
+    let minHour = 8;
+    let activeInteract = null; // 紀錄當前的拖拽對象
 
     function updateTimeStamp() {
         const now = new Date();
         document.getElementById('time-stamp').innerText = `@ ${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    }
+
+    function handleGlobalKey(e) {
+        if (e.key === "Escape") cancelCurrentDrag(); // 按下 Esc 取消
+    }
+
+    function cancelCurrentDrag() {
+        if (!document.body.classList.contains('dragging')) return;
+        document.body.classList.remove('dragging');
+        renderTimeline(); // 直接重繪以取消變動
+        showToast("🚫 拖拽已取消");
     }
 
     const hS = document.getElementById('fHour'), mS = document.getElementById('fMin');
@@ -129,21 +155,18 @@
         const axis = document.getElementById('hourAxis');
         zone.innerHTML = ''; axis.innerHTML = '';
         zone.classList.remove('dragging-mode');
+        document.body.classList.remove('dragging');
 
         const dayData = allData.filter(item => (item.日期 || "").replace(/-/g, '/') === currentDay)
                                .sort((a,b) => a.時間.localeCompare(b.時間));
 
-        if (dayData.length > 0) {
-            minHour = Math.max(0, parseInt(dayData[0].時間.split(':')[0]) - 0); // 基準小時
-        }
+        if (dayData.length > 0) minHour = Math.max(0, parseInt(dayData[0].時間.split(':')[0]) - 1);
 
-        let lastHour = -1; // 追蹤上一個顯示的小時
-
+        let lastHour = -1;
         dayData.forEach((item) => {
             const currentHour = parseInt(item.時間.split(':')[0]);
             const card = document.createElement('div');
             card.className = 'event-card';
-            
             card.innerHTML = `
                 <div class="drag-tooltip"></div>
                 <div class="card-actions">
@@ -156,13 +179,11 @@
             `;
             zone.appendChild(card);
 
-            // 修正 1：左側標籤去重邏輯
             const timeLabel = document.createElement('div');
             timeLabel.className = 'axis-label';
             timeLabel.style.height = (card.offsetHeight + 12) + "px";
             timeLabel.innerText = (currentHour !== lastHour) ? String(currentHour).padStart(2, '0') : "";
             axis.appendChild(timeLabel);
-            
             lastHour = currentHour;
             setupDragAndSnap(card, item);
         });
@@ -173,10 +194,10 @@
             listeners: {
                 start(event) {
                     const zone = document.getElementById('dropZone');
+                    document.body.classList.add('dragging'); // 觸發全域背景變淡
                     zone.classList.add('dragging-mode');
                     event.target.classList.add('is-dragging');
                     const [h, m] = item.時間.split(':').map(Number);
-                    // 修正 3：支援拖到更早或更晚的時間 (動態基準)
                     const initialTop = ((h - minHour) * 60 + m) / 15 * SLOT_PX;
                     event.target.style.top = initialTop + "px";
                 },
@@ -186,7 +207,6 @@
                     target.style.transform = `translateY(${y}px)`;
                     target.setAttribute('data-y', y);
 
-                    // 修正 2：實時計算並更新預覽 Tooltip
                     const currentTop = parseFloat(target.style.top) + y;
                     const snappedTop = Math.round(currentTop / SLOT_PX) * SLOT_PX;
                     const totalMins = Math.max(0, (snappedTop / SLOT_PX) * 15);
@@ -195,16 +215,19 @@
                     target.querySelector('.drag-tooltip').innerText = `${String(newH).padStart(2,'0')}:${String(newM).padStart(2,'0')}`;
                 },
                 async end(event) {
+                    const rect = event.target.getBoundingClientRect();
+                    const cancelRect = document.getElementById('cancel-dropzone').getBoundingClientRect();
+                    
+                    // 偵測是否丟進取消區 (或按下 Esc)
+                    if (rect.top < cancelRect.bottom) {
+                        cancelCurrentDrag();
+                        return;
+                    }
+
                     const target = event.target;
-                    const y = parseFloat(target.getAttribute('data-y')) || 0;
-                    const snappedTop = Math.round((parseFloat(target.style.top) + y) / SLOT_PX) * SLOT_PX;
+                    const snappedTop = Math.round((parseFloat(target.style.top) + (parseFloat(target.getAttribute('data-y')) || 0)) / SLOT_PX) * SLOT_PX;
                     const totalMins = Math.max(0, (snappedTop / SLOT_PX) * 15);
                     const newTime = `${String(Math.floor(totalMins / 60) + minHour).padStart(2,'0')}:${String(totalMins % 60).padStart(2,'0')}`;
-
-                    document.getElementById('dropZone').classList.remove('dragging-mode');
-                    target.classList.remove('is-dragging');
-                    target.style.transform = '';
-                    target.setAttribute('data-y', 0);
 
                     if (newTime !== item.時間) {
                         showToast(`⏳ 同步至 ${newTime}...`);
