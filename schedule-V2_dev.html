@@ -3,54 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>每日行程 (DEV - Sortable)</title>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <title>每日行程 (DEV - Smart Timeline)</title>
     <style>
         :root { 
             --primary: #76c7ff; --bg: #f7f9fc;
-            --collapsed-h: 20px;
+            --slot-h: 45px; /* 拖拽時 15 分鐘的高度 */
         }
-        body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 30px; }
+        body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; overflow-x: hidden; }
         header { background: white; padding: 12px 20px; display: flex; align-items: center; box-shadow: 0 1px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 2000; }
         
-        .date-selector { display: flex; overflow-x: auto; padding: 10px; gap: 8px; background: white; sticky; top: 50px; z-index: 1999; scrollbar-width: none; }
-        .date-box { min-width: 50px; padding: 6px; background: #fff; border: 1px solid #eee; border-radius: 10px; text-align: center; cursor: pointer; font-size: 12px; }
-        .date-box.active { background: var(--primary); color: white; }
+        .date-selector { display: flex; overflow-x: auto; padding: 10px; gap: 8px; background: white; border-bottom: 1px solid #eee; position: sticky; top: 48px; z-index: 1999; scrollbar-width: none; }
+        .date-box { min-width: 55px; padding: 8px; background: #fff; border: 1px solid #eee; border-radius: 12px; text-align: center; cursor: pointer; font-size: 12px; flex-shrink: 0; }
+        .date-box.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        .timeline-container { display: flex; padding: 10px 0; }
+        /* 時間軸外容器 */
+        .timeline-container { display: flex; padding: 15px 5px; position: relative; min-height: 80vh; }
         
-        /* 左側時間軸線 */
-        .hour-axis { width: 40px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; color: #ccc; font-size: 11px; }
-        .axis-time { height: auto; margin-bottom: 20px; font-weight: bold; }
-        .axis-line { width: 2px; flex-grow: 1; background: #eee; margin-bottom: 10px; position: relative; }
-        .axis-line::after { content: '•••'; position: absolute; top: 50%; left: -8px; writing-mode: vertical-lr; color: #ddd; letter-spacing: 2px; }
+        /* 小時軸 */
+        .hour-axis { width: 35px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; color: #ccc; font-size: 11px; }
+        .axis-label { height: auto; font-weight: bold; margin-bottom: 10px; }
 
-        /* 行程容器 */
-        .drop-zone { flex-grow: 1; margin-right: 15px; }
-
-        /* 列表排序動畫 */
-        .sortable-ghost { opacity: 0.4; background: #e3f2fd !important; }
-        .sortable-drag { opacity: 0.9; transform: rotate(2deg); }
+        /* 行程區域：關鍵在於動態切換 class */
+        .drop-zone { flex-grow: 1; position: relative; transition: all 0.3s ease; }
+        
+        /* 拖拽模式下的背景網格 */
+        .drop-zone.dragging-mode {
+            background-image: linear-gradient(#e0e0e0 1px, transparent 1px);
+            background-size: 100% var(--slot-h);
+            border-left: 1px solid #eee;
+        }
 
         .event-card {
-            background: white; border-radius: 16px; padding: 15px;
-            margin-bottom: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-            border-left: 6px solid var(--primary);
-            cursor: grab; position: relative;
+            background: white; border-radius: 18px; padding: 15px; margin-bottom: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04); border-left: 6px solid var(--primary);
+            position: relative; cursor: grab; z-index: 100; touch-action: none;
         }
-        .event-card:active { cursor: grabbing; }
-        .event-card h4 { margin: 0; font-size: 16px; color: #333; }
-        .event-card p { margin: 6px 0 0; font-size: 13px; color: #777; white-space: pre-wrap; line-height: 1.5; }
-        .card-time { font-size: 11px; color: var(--primary); font-weight: 800; display: block; margin-bottom: 5px; }
         
-        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 10px 20px; border-radius: 20px; font-size: 12px; display: none; z-index: 3000; }
+        /* 拖拽中的樣式 */
+        .event-card.is-dragging {
+            position: absolute !important; width: 85%; opacity: 0.8; z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); pointer-events: none;
+        }
+
+        .card-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 10px; opacity: 0.3; }
+        .action-icon { font-size: 16px; cursor: pointer; padding: 4px; }
+
+        .event-card h4 { margin: 0; font-size: 16px; color: #333; padding-right: 40px; }
+        .event-card p { margin: 6px 0 0; font-size: 13px; color: #777; white-space: pre-wrap; line-height: 1.5; }
+        .card-time-tag { font-size: 11px; color: var(--primary); font-weight: 800; display: block; margin-bottom: 4px; }
+
+        /* Modal & FAB */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal { width: 88%; max-width: 360px; background: white; border-radius: 30px; padding: 25px; box-sizing: border-box; }
+        .btn { padding: 12px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; }
+        .add-fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; border: none; box-shadow: 0 8px 20px rgba(118,199,255,0.4); z-index: 2500; }
+        
+        #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 30px; font-size: 12px; display: none; z-index: 4000; }
     </style>
 </head>
 <body>
 
 <header>
-    <div onclick="location.href='index.html'" style="margin-right:10px; cursor:pointer;"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#76c7ff" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
-    <b>📅 行程排序 (DEV)</b>
+    <div onclick="location.href='index.html'" style="margin-right:15px; cursor:pointer;"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#76c7ff" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+    <b style="font-size: 18px;">📅 行程時間軸 (DEV)</b>
 </header>
 
 <div class="date-selector" id="dateSelector"></div>
@@ -60,11 +75,38 @@
     <div class="drop-zone" id="dropZone"></div>
 </div>
 
+<button class="add-fab" onclick="openModal('add')">＋</button>
+
+<div id="modal-overlay" class="modal-overlay">
+    <div class="modal">
+        <h2 id="modalTitle" style="text-align:center; color:var(--primary);">新增行程</h2>
+        <input type="hidden" id="oldDataKey">
+        <input type="text" id="fTitle" style="width:100%; padding:12px; margin:8px 0; border:1px solid #eee; border-radius:12px;" placeholder="行程標題">
+        <div style="display:flex; gap:10px; margin:8px 0;">
+            <select id="fHour" style="flex:1; padding:10px; border-radius:12px; border:1px solid #eee;"></select>
+            <select id="fMin" style="flex:1; padding:10px; border-radius:12px; border:1px solid #eee;"></select>
+        </div>
+        <textarea id="fContent" rows="4" style="width:100%; padding:12px; border:1px solid #eee; border-radius:12px; margin:8px 0;" placeholder="詳細備註..."></textarea>
+        <input type="text" id="fKeyword" style="width:100%; padding:12px; border:1px solid #eee; border-radius:12px; margin:8px 0;" placeholder="地圖關鍵字">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:15px;">
+            <button class="btn" onclick="closeModal()">取消</button>
+            <button class="btn" style="background:var(--primary); color:white;" onclick="submitForm()">確認儲存</button>
+        </div>
+    </div>
+</div>
+
 <div id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbz7lrfOtPmZH7fqUwbiRk3KgHAwZATgi51VSt2YqFamEinhdaxRvzqpMSrtUq7PsAK0bQ/exec";
-    let allData = [], currentDay = "2026/03/01";
+    const START_H = 8, SLOT_PX = 45;
+    let allData = [], currentDay = "2026/03/01", isEditMode = false;
+
+    // 初始化 Modal 下拉選單
+    const hS = document.getElementById('fHour'), mS = document.getElementById('fMin');
+    for(let h=0; h<24; h++) hS.add(new Option(String(h).padStart(2,'0')+'時', String(h).padStart(2,'0')));
+    ['00','15','30','45'].forEach(m => mS.add(new Option(m+'分', m)));
 
     async function loadData() {
         const r = await fetch(GAS_URL + "?type=schedule");
@@ -74,97 +116,156 @@
     }
 
     function renderDates() {
-        const TRIP_DATES = ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04", "2026/03/05", "2026/03/06"];
-        document.getElementById('dateSelector').innerHTML = TRIP_DATES.map(d => `
-            <div class="date-box ${currentDay === d ? 'active' : ''}" onclick="changeDay('${d}')">${d.split('/')[1]}/${d.split('/')[2]}</div>`).join('');
+        const dates = ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04", "2026/03/05", "2026/03/06"];
+        document.getElementById('dateSelector').innerHTML = dates.map(d => `
+            <div class="date-box ${currentDay === d ? 'active' : ''}" onclick="setDay('${d}')">${d.split('/')[1]}/${d.split('/')[2]}</div>`).join('');
     }
 
-    function changeDay(d) { currentDay = d; renderDates(); renderTimeline(); }
+    function setDay(d) { currentDay = d; renderDates(); renderTimeline(); }
 
     function renderTimeline() {
         const zone = document.getElementById('dropZone');
         const axis = document.getElementById('hourAxis');
         zone.innerHTML = ''; axis.innerHTML = '';
+        zone.classList.remove('dragging-mode');
 
         const dayData = allData.filter(item => (item.日期 || "").replace(/-/g, '/') === currentDay)
                                .sort((a,b) => a.時間.localeCompare(b.時間));
 
-        dayData.forEach((item, index) => {
-            // 生成卡片
+        dayData.forEach((item) => {
             const card = document.createElement('div');
             card.className = 'event-card';
-            card.dataset.title = item.標題; // 用於排序識別
-            card.dataset.time = item.時間;
+            // 重要：修正內容包含換行符號的問題
+            const safeItem = JSON.stringify(item).replace(/"/g, '&quot;');
+            
             card.innerHTML = `
-                <span class="card-time">🕙 ${item.時間}</span>
+                <div class="card-actions">
+                    <span class="action-icon" onclick="openModal('edit', ${safeItem})">✏️</span>
+                    <span class="action-icon" onclick="handleDelete('${item.時間}','${item.標題}')">🗑️</span>
+                </div>
+                <span class="card-time-tag">🕙 ${item.時間}</span>
                 <h4>${item.標題}</h4>
                 <p>${item.內容 || ''}</p>
             `;
             zone.appendChild(card);
 
-            // 生成左側小時對齊標記
             const timeLabel = document.createElement('div');
-            timeLabel.className = 'axis-time';
-            timeLabel.style.height = (card.offsetHeight) + "px";
+            timeLabel.className = 'axis-label';
+            timeLabel.style.height = card.offsetHeight + 12 + "px";
             timeLabel.innerText = item.時間.split(':')[0];
             axis.appendChild(timeLabel);
 
-            if (index < dayData.length - 1) {
-                const line = document.createElement('div');
-                line.className = 'axis-line';
-                axis.appendChild(line);
-            }
+            // 啟動拖拽對齊邏輯
+            setupDragAndSnap(card, item);
         });
+    }
 
-        // 初始化拖動排序
-        new Sortable(zone, {
-            animation: 150,
-            ghostClass: 'sortable-ghost',
-            dragClass: 'sortable-drag',
-            onEnd: function (evt) {
-                recalculateTimes(); // 拖動結束後重新計算時間
+    function setupDragAndSnap(el, item) {
+        interact(el).draggable({
+            listeners: {
+                start(event) {
+                    const zone = document.getElementById('dropZone');
+                    zone.classList.add('dragging-mode'); // 展開詳細時間軸
+                    event.target.classList.add('is-dragging');
+                    
+                    // 計算初始 Top (基於 08:00 開始)
+                    const [h, m] = item.時間.split(':').map(Number);
+                    const initialTop = ((h - START_H) * 60 + m) / 15 * SLOT_PX;
+                    event.target.style.top = initialTop + "px";
+                },
+                move(event) {
+                    const target = event.target;
+                    const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+                    target.style.transform = `translateY(${y}px)`;
+                    target.setAttribute('data-y', y);
+                },
+                async end(event) {
+                    const target = event.target;
+                    const zone = document.getElementById('dropZone');
+                    const currentTop = parseFloat(target.style.top) + (parseFloat(target.getAttribute('data-y')) || 0);
+                    
+                    // 吸附到最近的 15 分鐘網格
+                    const snappedTop = Math.round(currentTop / SLOT_PX) * SLOT_PX;
+                    const totalMins = (snappedTop / SLOT_PX) * 15;
+                    const newH = Math.floor(totalMins / 60) + START_H;
+                    const newM = totalMins % 60;
+                    const newTime = `${String(newH).padStart(2,'0')}:${String(newM).padStart(2,'0')}`;
+
+                    // 重置 UI 狀態
+                    zone.classList.remove('dragging-mode');
+                    target.classList.remove('is-dragging');
+                    target.style.transform = '';
+                    target.setAttribute('data-y', 0);
+
+                    if (newTime !== item.時間) {
+                        showToast(`⏳ 同步時間至 ${newTime}...`);
+                        await updateCloudTime(item, newTime);
+                    } else {
+                        renderTimeline(); // 沒變動則刷回原樣
+                    }
+                }
             }
         });
     }
 
-    // 重新計算時間並同步到雲端
-    async function recalculateTimes() {
-        showToast("⏳ 正在重新規劃時間並同步...");
-        const cards = document.querySelectorAll('.event-card');
-        let baseHour = 8;
-        let baseMin = 0;
+    async function updateCloudTime(item, newT) {
+        const payload = {
+            action: "edit", date: currentDay,
+            oldTime: item.時間, oldTitle: item.標題,
+            time: newT, title: item.標題,
+            content: item.內容, keyword: item["Google map keyword"] || ""
+        };
+        await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
+        setTimeout(() => loadData(), 1200);
+    }
 
-        for (let i = 0; i < cards.length; i++) {
-            const newTime = `${String(baseHour).padStart(2,'0')}:${String(baseMin).padStart(2,'0')}`;
-            const title = cards[i].dataset.title;
-            const oldTime = cards[i].dataset.time;
-
-            // 這裡模擬自動時間遞增：每個行程間隔 1 小時，您可以根據需要修改邏輯
-            baseHour++; 
-            
-            // 找出原始資料進行更新
-            const item = allData.find(d => d.標題 === title && d.時間 === oldTime);
-            if (item) {
-                const payload = {
-                    action: "edit",
-                    date: currentDay,
-                    oldTime: item.時間,
-                    oldTitle: item.標題,
-                    time: newTime, // 自動分配的新時間
-                    title: item.標題,
-                    content: item.內容,
-                    keyword: item["Google map keyword"] || ""
-                };
-                await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
-            }
+    // Modal 功能 (CRUD)
+    function openModal(mode, item = null) {
+        isEditMode = (mode === 'edit');
+        document.getElementById('modalTitle').innerText = isEditMode ? "編輯行程 ✏️" : "新增行程 📝";
+        if (isEditMode && item) {
+            document.getElementById('fTitle').value = item.標題;
+            document.getElementById('fContent').value = item.內容;
+            document.getElementById('fKeyword').value = item["Google map keyword"] || "";
+            const [h, m] = item.時間.split(':');
+            document.getElementById('fHour').value = h;
+            document.getElementById('fMin').value = m;
+            document.getElementById('oldDataKey').value = JSON.stringify({oldTime: item.時間, oldTitle: item.標題});
+        } else {
+            document.getElementById('fTitle').value = ""; document.getElementById('fContent').value = "";
+            document.getElementById('fKeyword').value = ""; document.getElementById('oldDataKey').value = "";
         }
-        setTimeout(() => loadData(), 1500);
+        document.getElementById('modal-overlay').style.display = 'flex';
+    }
+
+    function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+
+    async function submitForm() {
+        const payload = {
+            action: isEditMode ? "edit" : "add", date: currentDay,
+            time: `${document.getElementById('fHour').value}:${document.getElementById('fMin').value}`,
+            title: document.getElementById('fTitle').value,
+            content: document.getElementById('fContent').value,
+            keyword: document.getElementById('fKeyword').value
+        };
+        if (isEditMode) { const old = JSON.parse(document.getElementById('oldDataKey').value); payload.oldTime = old.oldTime; payload.oldTitle = old.oldTitle; }
+        closeModal();
+        showToast("⏳ 正在儲存...");
+        await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
+        setTimeout(() => loadData(), 1200);
+    }
+
+    async function handleDelete(time, title) {
+        if(!confirm("確定要刪除嗎？")) return;
+        showToast("🗑️ 正在刪除...");
+        await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({action:"delete", date:currentDay, time, title}) });
+        setTimeout(() => loadData(), 1200);
     }
 
     function showToast(m) {
         const t = document.getElementById('toast');
         t.innerText = m; t.style.display = 'block';
-        setTimeout(() => t.style.display = 'none', 2000);
+        setTimeout(() => t.style.display = 'none', 2500);
     }
 
     window.onload = loadData;
