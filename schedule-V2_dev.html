@@ -20,9 +20,9 @@
         }
         body.dragging #cancel-dropzone { top: 0; }
         
-        .date-selector { display: flex; overflow-x: auto; padding: 10px; gap: 8px; background: white; border-bottom: 1px solid #eee; position: sticky; top: 48px; z-index: 1999; }
-        .date-box { min-width: 50px; padding: 6px; background: #fff; border: 1px solid #eee; border-radius: 10px; text-align: center; font-size: 12px; }
-        .date-box.active { background: var(--primary); color: white; }
+        .date-selector { display: flex; overflow-x: auto; padding: 10px; gap: 8px; background: white; border-bottom: 1px solid #eee; position: sticky; top: 48px; z-index: 1999; scrollbar-width: none; }
+        .date-box { min-width: 50px; padding: 8px; background: #fff; border: 1px solid #eee; border-radius: 12px; text-align: center; font-size: 12px; flex-shrink: 0; cursor: pointer; }
+        .date-box.active { background: var(--primary); color: white; border-color: var(--primary); }
 
         .timeline-container { display: flex; padding: 10px 5px; position: relative; }
         .hour-axis { width: 0; flex-shrink: 0; overflow: hidden; }
@@ -41,17 +41,18 @@
             min-height: 2200px;
         }
 
+        /* 行程卡片佈局 */
         .event-card {
-            background: white; border-radius: 14px; padding: 12px 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 5px solid var(--primary);
-            position: relative; margin-bottom: 8px;
+            background: white; border-radius: 16px; padding: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05); border-left: 6px solid var(--primary);
+            position: relative; margin-bottom: 10px;
             cursor: grab; touch-action: none;
         }
 
-        /* 2. 淡化參考行程調亮 */
+        /* 拖拽模式下的視覺調整 */
         body.dragging .event-card:not(.is-dragging) { 
             position: absolute !important;
-            opacity: 0.45; 
+            opacity: 0.4; 
             filter: grayscale(0.5); 
             z-index: 1;
             width: 80%;
@@ -61,27 +62,45 @@
         .event-card.is-dragging {
             position: absolute !important; width: 85%;
             margin: 0 !important; z-index: 3000; pointer-events: none;
-            box-shadow: 0 12px 35px rgba(0,0,0,0.2); border-left-color: var(--danger);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2); border-left-color: var(--danger);
         }
 
-        /* 3. 指標移至最上緣 */
+        /* CRUD 按鈕樣式 */
+        .card-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 12px; opacity: 0.3; transition: 0.3s; }
+        .event-card:hover .card-actions { opacity: 1; }
+        .action-icon { font-size: 18px; cursor: pointer; }
+
+        /* 地圖按鈕 */
+        .map-link { 
+            display: inline-flex; align-items: center; gap: 5px; 
+            margin-top: 10px; padding: 6px 12px; background: #e8f5e9; 
+            color: #2e7d32; border-radius: 10px; font-size: 12px; 
+            text-decoration: none; font-weight: bold;
+        }
+
+        /* 指針與 Tooltip */
         .drag-pointer {
-            position: absolute; left: -14px; top: 0; /* 改為 0 */
+            position: absolute; left: -14px; top: 0;
             width: 0; height: 0; 
             border-top: 6px solid transparent; border-bottom: 6px solid transparent;
             border-right: 10px solid var(--danger); display: none;
         }
         .is-dragging .drag-pointer { display: block; }
-
         .drag-tooltip {
-            position: absolute; top: -35px; left: 0; /* 跟隨上緣 */
+            position: absolute; top: -35px; left: 0;
             background: var(--danger); color: white; padding: 3px 8px;
             border-radius: 6px; font-weight: bold; font-size: 12px; display: none;
         }
         .is-dragging .drag-tooltip { display: block; }
 
-        .card-time-tag { font-size: 11px; color: var(--primary); font-weight: 800; }
-        #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 30px; display: none; z-index: 5000; }
+        /* Modal & FAB */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal { width: 88%; max-width: 360px; background: white; border-radius: 30px; padding: 25px; box-sizing: border-box; }
+        .add-fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; border: none; box-shadow: 0 8px 20px rgba(118,199,255,0.4); z-index: 2500; cursor: pointer; }
+        
+        #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 30px; font-size: 12px; display: none; z-index: 5000; }
+        .card-time-tag { font-size: 12px; color: var(--primary); font-weight: 800; display: block; margin-bottom: 5px; }
+        .card-content { font-size: 14px; color: #666; white-space: pre-wrap; margin-top: 8px; line-height: 1.5; }
     </style>
 </head>
 <body onkeydown="if(event.key==='Escape') location.reload()">
@@ -90,7 +109,7 @@
 
 <header>
     <div onclick="location.href='index.html'" style="margin-right:15px; cursor:pointer;"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#76c7ff" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
-    <b style="font-size: 18px;">📅 行程 (DEV) <span id="ver-stamp" class="version-tag">Ver. ----</span></b>
+    <b style="font-size: 18px;">📅 每日行程 (DEV) <span id="ver-stamp" class="version-tag"></span></b>
 </header>
 
 <div class="date-selector" id="dateSelector"></div>
@@ -100,19 +119,43 @@
     <div class="drop-zone" id="dropZone"></div>
 </div>
 
+<button class="add-fab" onclick="openModal('add')">＋</button>
+
+<div id="modal-overlay" class="modal-overlay">
+    <div class="modal">
+        <h2 id="modalTitle" style="text-align:center; color:var(--primary); margin-top:0;">新增行程</h2>
+        <input type="hidden" id="oldDataKey">
+        <input type="text" id="fTitle" style="width:100%; padding:12px; margin:8px 0; border:1px solid #eee; border-radius:12px; box-sizing:border-box;" placeholder="行程標題">
+        <div style="display:flex; gap:10px; margin:8px 0;">
+            <select id="fHour" style="flex:1; padding:10px; border-radius:12px; border:1px solid #eee;"></select>
+            <select id="fMin" style="flex:1; padding:10px; border-radius:12px; border:1px solid #eee;"></select>
+        </div>
+        <textarea id="fContent" rows="4" style="width:100%; padding:12px; border:1px solid #eee; border-radius:12px; margin:8px 0; box-sizing:border-box;" placeholder="詳細備註..."></textarea>
+        <input type="text" id="fKeyword" style="width:100%; padding:12px; border:1px solid #eee; border-radius:12px; margin:8px 0; box-sizing:border-box;" placeholder="地圖關鍵字">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:15px;">
+            <button onclick="closeModal()" style="padding:12px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;">取消</button>
+            <button style="background:var(--primary); color:white; padding:12px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;" onclick="submitForm()">確認儲存</button>
+        </div>
+    </div>
+</div>
+
 <div id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbz7lrfOtPmZH7fqUwbiRk3KgHAwZATgi51VSt2YqFamEinhdaxRvzqpMSrtUq7PsAK0bQ/exec";
     const SLOT_PX = 32; 
-    let allData = [], currentDay = "2026/03/01";
+    let allData = [], currentDay = "2026/03/01", isEditMode = false;
 
     function updateVersionTag() {
         const now = new Date();
         const ver = `${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
         document.getElementById('ver-stamp').innerText = `Ver. ${ver}`;
     }
+
+    const hS = document.getElementById('fHour'), mS = document.getElementById('fMin');
+    for(let h=0; h<24; h++) hS.add(new Option(String(h).padStart(2,'0')+'時', String(h).padStart(2,'0')));
+    ['00','15','30','45'].forEach(m => mS.add(new Option(m+'分', m)));
 
     async function loadData() {
         const r = await fetch(GAS_URL + "?type=schedule");
@@ -122,11 +165,11 @@
     }
 
     function renderDates() {
-        const dates = ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04", "2026/03/05"];
-        document.getElementById('dateSelector').innerHTML = dates.map(d => `<div class="date-box ${currentDay === d ? 'active' : ''}" onclick="changeDay('${d}')">${d.split('/')[2]}日</div>`).join('');
+        const dates = ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04", "2026/03/05", "2026/03/06"];
+        document.getElementById('dateSelector').innerHTML = dates.map(d => `<div class="date-box ${currentDay === d ? 'active' : ''}" onclick="setDay('${d}')">${d.split('/')[1]}/${d.split('/')[2]}</div>`).join('');
     }
 
-    function changeDay(d) { currentDay = d; renderDates(); renderTimeline(); }
+    function setDay(d) { currentDay = d; renderDates(); renderTimeline(); }
 
     function renderTimeline() {
         const zone = document.getElementById('dropZone');
@@ -141,12 +184,22 @@
             card.className = 'event-card';
             const [h, m] = item.時間.split(':').map(Number);
             card.dataset.originTop = (h * 60 + m) / 15 * SLOT_PX;
+            
+            const keyword = item["Google map keyword"] || "";
+            const mapHtml = keyword ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(keyword)}" class="map-link" target="_blank">📍 查看地圖導覽</a>` : "";
+            const safeItem = JSON.stringify(item).replace(/"/g, '&quot;');
 
             card.innerHTML = `
                 <div class="drag-pointer"></div>
                 <div class="drag-tooltip"></div>
+                <div class="card-actions">
+                    <span class="action-icon" onclick="openModal('edit', ${safeItem})">✏️</span>
+                    <span class="action-icon" onclick="handleDelete('${item.時間}','${item.標題}')">🗑️</span>
+                </div>
                 <span class="card-time-tag">🕙 ${item.時間}</span>
                 <h4 style="margin:5px 0">${item.標題}</h4>
+                <div class="card-content">${item.內容 || ''}</div>
+                ${mapHtml}
             `;
             zone.appendChild(card);
             setupDrag(card, item);
@@ -159,40 +212,27 @@
                 start(event) {
                     const target = event.target;
                     const axis = document.getElementById('hourAxis');
-                    
                     document.body.classList.add('dragging');
                     target.classList.add('is-dragging');
-                    
                     axis.innerHTML = '';
                     for(let i=0; i<24; i++) {
-                        const lbl = document.createElement('div');
-                        lbl.className = 'axis-label';
-                        lbl.innerText = String(i).padStart(2,'0');
-                        axis.appendChild(lbl);
+                        const lbl = document.createElement('div'); lbl.className = 'axis-label';
+                        lbl.innerText = String(i).padStart(2,'0'); axis.appendChild(lbl);
                     }
-
-                    // 4. 調亮並定位其餘卡片
                     document.querySelectorAll('.event-card:not(.is-dragging)').forEach(c => {
                         c.style.top = c.dataset.originTop + "px";
                     });
-
-                    // 3. 抓取校準：滑鼠強行對齊卡片上緣
                     target.setAttribute('data-offset-y', 0); 
                     target.style.top = target.dataset.originTop + "px";
-
-                    // 1. 自動捲動到行程設定的時間
-                    const scrollY = parseFloat(target.dataset.originTop) + 120; // 加上 header 高度補償
-                    window.scrollTo({ top: scrollY - 200, behavior: 'instant' });
+                    const scrollY = parseFloat(target.dataset.originTop);
+                    window.scrollTo({ top: scrollY + 50, behavior: 'smooth' });
                 },
                 move(event) {
                     const target = event.target;
                     const zoneRect = document.getElementById('dropZone').getBoundingClientRect();
-                    
-                    // 滑鼠直接控制卡片頂部
                     let newTop = event.clientY - zoneRect.top;
                     if(newTop < 0) newTop = 0;
                     target.style.top = newTop + "px";
-
                     const snappedTop = Math.round(newTop / SLOT_PX) * SLOT_PX;
                     const totalMins = (snappedTop / SLOT_PX) * 15;
                     const hh = Math.floor(totalMins / 60);
@@ -206,12 +246,11 @@
                     const snappedTop = Math.round(finalTop / SLOT_PX) * SLOT_PX;
                     const totalMins = (snappedTop / SLOT_PX) * 15;
                     const newTime = `${String(Math.floor(totalMins / 60)).padStart(2,'0')}:${String(totalMins % 60).padStart(2,'0')}`;
-
                     if (newTime !== item.時間 && totalMins < 1440) {
                         showToast(`🚀 移動至 ${newTime}...`);
                         await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({
                             action: "edit", date: currentDay, oldTime: item.時間, oldTitle: item.標題,
-                            time: newTime, title: item.標題, content: item.內容
+                            time: newTime, title: item.標題, content: item.內容, keyword: item["Google map keyword"] || ""
                         })});
                         setTimeout(loadData, 1000);
                     } else { renderTimeline(); }
@@ -220,7 +259,42 @@
         });
     }
 
+    function openModal(mode, item = null) {
+        isEditMode = (mode === 'edit');
+        document.getElementById('modalTitle').innerText = isEditMode ? "編輯行程 ✏️" : "新增行程 📝";
+        if (isEditMode && item) {
+            document.getElementById('fTitle').value = item.標題;
+            document.getElementById('fContent').value = item.內容;
+            document.getElementById('fKeyword').value = item["Google map keyword"] || "";
+            const [h, m] = item.時間.split(':');
+            document.getElementById('fHour').value = h; document.getElementById('fMin').value = m;
+            document.getElementById('oldDataKey').value = JSON.stringify({oldTime: item.時間, oldTitle: item.標題});
+        } else {
+            document.getElementById('fTitle').value = ""; document.getElementById('fContent').value = "";
+            document.getElementById('fKeyword').value = ""; document.getElementById('oldDataKey').value = "";
+        }
+        document.getElementById('modal-overlay').style.display = 'flex';
+    }
+
+    function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+
+    async function submitForm() {
+        const payload = { action: isEditMode ? "edit" : "add", date: currentDay, time: `${document.getElementById('fHour').value}:${document.getElementById('fMin').value}`, title: document.getElementById('fTitle').value, content: document.getElementById('fContent').value, keyword: document.getElementById('fKeyword').value };
+        if (isEditMode) { const old = JSON.parse(document.getElementById('oldDataKey').value); payload.oldTime = old.oldTime; payload.oldTitle = old.oldTitle; }
+        closeModal(); showToast("⏳ 正在儲存...");
+        await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
+        setTimeout(loadData, 1000);
+    }
+
+    async function handleDelete(time, title) {
+        if(!confirm("確定要刪除嗎？")) return;
+        showToast("🗑️ 正在刪除...");
+        await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({action:"delete", date:currentDay, time, title}) });
+        setTimeout(loadData, 1000);
+    }
+
     function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2500); }
+    
     window.onload = () => { updateVersionTag(); loadData(); };
 </script>
 </body>
