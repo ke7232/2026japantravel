@@ -9,10 +9,11 @@
             --primary: #76c7ff; --bg: #f7f9fc;
             --slot-h: 45px; --danger: #ff7675;
         }
-        body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; overflow-x: hidden; }
+        body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; }
         header { background: white; padding: 12px 20px; display: flex; align-items: center; box-shadow: 0 1px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 2000; }
         .version-tag { font-size: 10px; color: #ff7675; font-weight: bold; margin-left: 8px; border: 1px solid #ff7675; padding: 2px 5px; border-radius: 4px; }
 
+        /* 全域取消區 */
         #cancel-dropzone {
             position: fixed; top: -60px; left: 0; width: 100%; height: 60px;
             background: var(--danger); color: white; display: flex; align-items: center; justify-content: center;
@@ -20,59 +21,61 @@
         }
         body.dragging #cancel-dropzone { top: 0; }
         
-        .date-selector { display: flex; overflow-x: auto; padding: 10px; gap: 8px; background: white; border-bottom: 1px solid #eee; position: sticky; top: 48px; z-index: 1999; scrollbar-width: none; }
-        .date-box { min-width: 55px; padding: 8px; background: #fff; border: 1px solid #eee; border-radius: 12px; text-align: center; cursor: pointer; font-size: 12px; flex-shrink: 0; }
-        .date-box.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .date-selector { display: flex; overflow-x: auto; padding: 10px; gap: 8px; background: white; border-bottom: 1px solid #eee; position: sticky; top: 48px; z-index: 1999; }
+        .date-box { min-width: 55px; padding: 8px; background: #fff; border: 1px solid #eee; border-radius: 12px; text-align: center; font-size: 12px; flex-shrink: 0; }
+        .date-box.active { background: var(--primary); color: white; }
 
-        .timeline-container { display: flex; padding: 15px 5px; position: relative; min-height: 80vh; }
+        .timeline-container { display: flex; padding: 0 5px; position: relative; min-height: 80vh; }
         
-        /* 修正：確保小時軸在拖拽時依然寬度固定 */
-        .hour-axis { width: 40px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; color: #ccc; font-size: 11px; z-index: 10; }
-        .axis-label { font-weight: bold; display: flex; align-items: flex-start; justify-content: center; box-sizing: border-box; }
+        /* 拖拽時強制撐開高度，方便向下移動 */
+        body.dragging .timeline-container { height: 2500px !important; }
 
-        .drop-zone { flex-grow: 1; position: relative; border-left: 1px solid #eee; }
+        .hour-axis { width: 45px; flex-shrink: 0; border-right: 1px solid #eee; background: #fdfdfd; }
+        .axis-label { 
+            height: calc(var(--slot-h) * 4); /* 每小時的高度 */
+            display: flex; align-items: flex-start; justify-content: center;
+            font-size: 11px; color: #bbb; border-bottom: 1px dashed #f0f0f0;
+            padding-top: 5px; font-weight: bold;
+        }
+
+        .drop-zone { flex-grow: 1; position: relative; }
         .drop-zone.dragging-mode {
             background-image: linear-gradient(#e0e0e0 1px, transparent 1px);
-            background-size: 100% var(--slot-h);
+            background-size: 100% var(--slot-h); /* 15分鐘一格 */
         }
 
         .event-card {
-            background: white; border-radius: 18px; padding: 15px; margin-bottom: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.04); border-left: 6px solid var(--primary);
-            position: relative; cursor: grab; z-index: 100; touch-action: none;
+            background: white; border-radius: 16px; padding: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 6px solid var(--primary);
+            position: relative; margin: 10px; cursor: grab; touch-action: none;
         }
-        body.dragging .event-card:not(.is-dragging) { opacity: 0.15; filter: grayscale(1); }
 
+        /* 拖拽中样式：消除 Gap 的關鍵是移除原本的 margin 並強制寬度 */
         .event-card.is-dragging {
-            position: absolute !important; width: 85%; opacity: 0.9; z-index: 3000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); pointer-events: none;
+            position: absolute !important; width: 280px; margin: 0 !important;
+            opacity: 0.95; z-index: 3000; pointer-events: none;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
         }
+
+        body.dragging .event-card:not(.is-dragging) { opacity: 0.2; filter: grayscale(1); }
 
         .drag-tooltip {
-            position: absolute; top: -45px; left: 50%; transform: translateX(-50%);
-            background: var(--primary); color: white; padding: 5px 12px;
-            border-radius: 10px; font-weight: bold; font-size: 14px; display: none;
+            position: absolute; top: -50px; left: 50%; transform: translateX(-50%);
+            background: #333; color: white; padding: 6px 15px;
+            border-radius: 20px; font-weight: bold; font-size: 16px; display: none;
         }
-        .is-dragging .drag-tooltip { display: block; }
+        .is-dragging .drag-tooltip { display: block; border: 2px solid var(--primary); }
 
-        .card-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 10px; opacity: 0.3; }
-        .event-card h4 { margin: 0; font-size: 16px; color: #333; padding-right: 40px; }
-        .event-card p { margin: 6px 0 0; font-size: 13px; color: #777; white-space: pre-wrap; line-height: 1.5; }
-        .card-time-tag { font-size: 11px; color: var(--primary); font-weight: 800; display: block; margin-bottom: 4px; }
-
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-        .modal { width: 88%; max-width: 360px; background: white; border-radius: 30px; padding: 25px; box-sizing: border-box; }
-        .add-fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; border: none; box-shadow: 0 8px 20px rgba(118,199,255,0.4); z-index: 2500; }
-        #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 30px; font-size: 12px; display: none; z-index: 5000; }
+        .card-time-tag { font-size: 11px; color: var(--primary); font-weight: 800; }
+        #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 30px; display: none; z-index: 5000; }
     </style>
 </head>
 <body onkeydown="if(event.key==='Escape') location.reload()">
 
-<div id="cancel-dropzone">🛑 拖放至此處取消</div>
+<div id="cancel-dropzone">❌ 放到此處取消拖拽</div>
 
 <header>
-    <div onclick="location.href='index.html'" style="margin-right:15px; cursor:pointer;"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#76c7ff" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
-    <b style="font-size: 18px;">📅 每日行程 (DEV) <span class="version-tag">Ver. 0121-1400</span></b>
+    <b style="font-size: 18px;">📅 行程 DEV <span class="version-tag">Ver. 0121-1615</span></b>
 </header>
 
 <div class="date-selector" id="dateSelector"></div>
@@ -82,38 +85,14 @@
     <div class="drop-zone" id="dropZone"></div>
 </div>
 
-<button class="add-fab" onclick="openModal('add')">＋</button>
-
-<div id="modal-overlay" class="modal-overlay">
-    <div class="modal">
-        <h2 id="modalTitle" style="text-align:center; color:var(--primary);">編輯行程</h2>
-        <input type="hidden" id="oldDataKey">
-        <input type="text" id="fTitle" style="width:100%; padding:12px; margin:8px 0; border:1px solid #eee; border-radius:12px;" placeholder="行程標題">
-        <div style="display:flex; gap:10px; margin:8px 0;">
-            <select id="fHour" style="flex:1; padding:10px; border-radius:12px; border:1px solid #eee;"></select>
-            <select id="fMin" style="flex:1; padding:10px; border-radius:12px; border:1px solid #eee;"></select>
-        </div>
-        <textarea id="fContent" rows="4" style="width:100%; padding:12px; border:1px solid #eee; border-radius:12px; margin:8px 0;" placeholder="詳細備註..."></textarea>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:15px;">
-            <button onclick="closeModal()" style="padding:12px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;">取消</button>
-            <button style="background:var(--primary); color:white; padding:12px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;" onclick="submitForm()">確認儲存</button>
-        </div>
-    </div>
-</div>
-
 <div id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbz7lrfOtPmZH7fqUwbiRk3KgHAwZATgi51VSt2YqFamEinhdaxRvzqpMSrtUq7PsAK0bQ/exec";
-    const SLOT_PX = 45;
-    let allData = [], currentDay = "2026/03/01", isEditMode = false;
-    let gridStartHour = 8;
-
-    // 初始化時間選單
-    const hS = document.getElementById('fHour'), mS = document.getElementById('fMin');
-    for(let h=0; h<24; h++) hS.add(new Option(String(h).padStart(2,'0')+'時', String(h).padStart(2,'0')));
-    ['00','15','30','45'].forEach(m => mS.add(new Option(m+'分', m)));
+    const SLOT_PX = 45; // 15分鐘
+    const GRID_START = 0; // 從 0 點開始顯示網格，確保向下空間
+    let allData = [], currentDay = "2026/03/01";
 
     async function loadData() {
         const r = await fetch(GAS_URL + "?type=schedule");
@@ -123,36 +102,44 @@
     }
 
     function renderDates() {
-        const dates = ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04", "2026/03/05", "2026/03/06"];
-        document.getElementById('dateSelector').innerHTML = dates.map(d => `<div class="date-box ${currentDay === d ? 'active' : ''}" onclick="setDay('${d}')">${d.split('/')[1]}/${d.split('/')[2]}</div>`).join('');
+        const dates = ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04", "2026/03/05"];
+        document.getElementById('dateSelector').innerHTML = dates.map(d => `<div class="date-box ${currentDay === d ? 'active' : ''}" onclick="changeDay('${d}')">${d.split('/')[2]}日</div>`).join('');
     }
 
-    function setDay(d) { currentDay = d; renderDates(); renderTimeline(); }
+    function changeDay(d) { currentDay = d; renderDates(); renderTimeline(); }
 
     function renderTimeline() {
         const zone = document.getElementById('dropZone');
         const axis = document.getElementById('hourAxis');
         zone.innerHTML = ''; axis.innerHTML = '';
-        const dayData = allData.filter(item => (item.日期 || "").replace(/-/g, '/') === currentDay).sort((a,b) => a.時間.localeCompare(b.時間));
+        
+        // 生成 24 小時軸
+        for(let i=0; i<24; i++) {
+            const lbl = document.createElement('div');
+            lbl.className = 'axis-label';
+            lbl.innerText = String(i).padStart(2,'0') + ':00';
+            axis.appendChild(lbl);
+        }
 
-        // 計算網格起點
-        gridStartHour = dayData.length > 0 ? Math.max(0, parseInt(dayData[0].時間.split(':')[0]) - 2) : 8;
+        const dayData = allData.filter(item => (item.日期 || "").replace(/-/g, '/') === currentDay)
+                               .sort((a,b) => a.時間.localeCompare(b.時間));
 
-        let lastH = -1;
         dayData.forEach((item) => {
-            const h = parseInt(item.時間.split(':')[0]);
             const card = document.createElement('div');
             card.className = 'event-card';
-            card.innerHTML = `<div class="drag-tooltip"></div><div class="card-actions"><span onclick='openModal("edit", ${JSON.stringify(item).replace(/"/g, "&quot;")})'>✏️</span></div><span class="card-time-tag">🕙 ${item.時間}</span><h4>${item.標題}</h4><p>${item.內容 || ''}</p>`;
+            // 計算初始位置
+            const [h, m] = item.時間.split(':').map(Number);
+            const topPos = (h * 60 + m) / 15 * SLOT_PX;
+            card.style.top = topPos + "px";
+            card.style.position = 'absolute'; // 預設就用絕對定位，防止拖拽跳變
+            card.style.width = "calc(100% - 40px)";
+
+            card.innerHTML = `
+                <div class="drag-tooltip"></div>
+                <span class="card-time-tag">${item.時間}</span>
+                <h4 style="margin:5px 0">${item.標題}</h4>
+            `;
             zone.appendChild(card);
-
-            const label = document.createElement('div');
-            label.className = 'axis-label';
-            label.style.height = (card.offsetHeight + 12) + "px";
-            label.innerText = (h !== lastH) ? String(h).padStart(2, '0') : "";
-            axis.appendChild(label);
-            lastH = h;
-
             setupDrag(card, item);
         });
     }
@@ -162,66 +149,68 @@
             listeners: {
                 start(event) {
                     const target = event.target;
-                    const zone = document.getElementById('dropZone');
-                    const axis = document.getElementById('hourAxis');
-                    
                     document.body.classList.add('dragging');
-                    zone.classList.add('dragging-mode');
+                    document.getElementById('dropZone').classList.add('dragging-mode');
                     target.classList.add('is-dragging');
-
-                    // 重新排列左側小時軸
-                    axis.innerHTML = '';
-                    for(let i=0; i<20; i++) {
-                        const hMark = document.createElement('div');
-                        hMark.className = 'axis-label';
-                        hMark.style.height = SLOT_PX * 4 + "px";
-                        hMark.innerText = String(gridStartHour + i).padStart(2,'0');
-                        axis.appendChild(hMark);
-                    }
-
-                    // 修正位移：精確計算初始 top
-                    const [h, m] = item.時間.split(':').map(Number);
-                    const initialTop = ((h - gridStartHour) * 60 + m) / 15 * SLOT_PX;
-                    target.style.top = initialTop + "px";
-                    target.setAttribute('data-y', 0);
+                    
+                    // 關鍵修復：抓取瞬間，將滑鼠位置校準到卡片內
+                    const rect = target.getBoundingClientRect();
+                    // 儲存初始滑鼠相對於卡片的位移，解決 Gap
+                    target.setAttribute('data-offset-y', event.clientY0 - rect.top);
                 },
                 move(event) {
                     const target = event.target;
-                    const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
-                    target.style.transform = `translateY(${y}px)`;
-                    target.setAttribute('data-y', y);
+                    const zoneRect = document.getElementById('dropZone').getBoundingClientRect();
+                    
+                    // 根據滑鼠絕對位置 - 容器位置 - 抓取位移 = 準確的 Top
+                    const offsetY = parseFloat(target.getAttribute('data-offset-y'));
+                    let newTop = event.clientY - zoneRect.top - offsetY;
 
-                    // 即時計算時間預覽
-                    const currentTop = parseFloat(target.style.top) + y;
-                    const snappedTop = Math.round(currentTop / SLOT_PX) * SLOT_PX;
-                    const totalMins = Math.max(0, (snappedTop / SLOT_PX) * 15);
-                    const newH = Math.floor(totalMins / 60) + gridStartHour;
-                    const newM = totalMins % 60;
-                    target.querySelector('.drag-tooltip').innerText = `${String(newH).padStart(2,'0')}:${String(newM).padStart(2,'0')}`;
+                    // 限制不超出頂部
+                    if(newTop < 0) newTop = 0;
+
+                    target.style.top = newTop + "px";
+
+                    // 計算吸附時間
+                    const snappedTop = Math.round(newTop / SLOT_PX) * SLOT_PX;
+                    const totalMins = (snappedTop / SLOT_PX) * 15;
+                    const hh = Math.floor(totalMins / 60);
+                    const mm = Math.floor(totalMins % 60);
+                    
+                    target.querySelector('.drag-tooltip').innerText = 
+                        `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
                 },
                 async end(event) {
-                    const rect = event.target.getBoundingClientRect();
-                    if (rect.top < 60) { location.reload(); return; } // 取消
-
                     const target = event.target;
-                    const finalY = parseFloat(target.getAttribute('data-y')) || 0;
-                    const snappedTop = Math.round((parseFloat(target.style.top) + finalY) / SLOT_PX) * SLOT_PX;
-                    const totalMins = Math.max(0, (snappedTop / SLOT_PX) * 15);
-                    const newTime = `${String(Math.floor(totalMins / 60) + gridStartHour).padStart(2,'0')}:${String(totalMins % 60).padStart(2,'0')}`;
+                    const zoneRect = document.getElementById('dropZone').getBoundingClientRect();
+                    
+                    document.body.classList.remove('dragging');
+                    document.getElementById('dropZone').classList.remove('dragging-mode');
 
-                    if (newTime !== item.時間) {
-                        showToast(`同步至 ${newTime}...`);
-                        await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({action:"edit", date:currentDay, oldTime:item.時間, oldTitle:item.標題, time:newTime, title:item.標題, content:item.內容}) });
-                        setTimeout(() => loadData(), 1000);
-                    } else { renderTimeline(); }
+                    // 檢查是否取消
+                    if (event.clientY < 60) { renderTimeline(); return; }
+
+                    const finalTop = parseFloat(target.style.top);
+                    const snappedTop = Math.round(finalTop / SLOT_PX) * SLOT_PX;
+                    const totalMins = (snappedTop / SLOT_PX) * 15;
+                    const newTime = `${String(Math.floor(totalMins / 60)).padStart(2,'0')}:${String(totalMins % 60).padStart(2,'0')}`;
+
+                    if (newTime !== item.時間 && totalMins < 1440) {
+                        showToast(`🚀 移動至 ${newTime}...`);
+                        await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({
+                            action: "edit", date: currentDay, oldTime: item.時間, oldTitle: item.標題,
+                            time: newTime, title: item.標題, content: item.內容
+                        })});
+                        setTimeout(loadData, 1000);
+                    } else {
+                        renderTimeline();
+                    }
                 }
             }
         });
     }
 
-    function openModal(mode, item) { /* 同前 */ }
-    function closeModal() { document.getElementById('modal-overlay').style.display='none'; }
-    function showToast(m) { const t=document.getElementById('toast'); t.innerText=m; t.style.display='block'; setTimeout(()=>t.style.display='none',2000); }
+    function showToast(m) { const t=document.getElementById('toast'); t.innerText=m; t.style.display='block'; setTimeout(()=>t.style.display='none',2500); }
     window.onload = loadData;
 </script>
 </body>
