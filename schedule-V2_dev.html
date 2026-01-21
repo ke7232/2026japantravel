@@ -7,9 +7,10 @@
     <style>
         :root { 
             --primary: #76c7ff; --bg: #f7f9fc;
-            --slot-h: 45px; --danger: #ff7675;
+            --slot-h: 32px; /* 3. 壓縮時間軸高度 */
+            --danger: #ff7675;
         }
-        body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; }
+        body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; overflow-x: hidden; }
         header { background: white; padding: 12px 20px; display: flex; align-items: center; box-shadow: 0 1px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 2000; }
         .version-tag { font-size: 10px; color: #ff7675; font-weight: bold; margin-left: 8px; border: 1px solid #ff7675; padding: 2px 5px; border-radius: 4px; }
 
@@ -24,62 +25,61 @@
         .date-box { min-width: 50px; padding: 6px; background: #fff; border: 1px solid #eee; border-radius: 10px; text-align: center; font-size: 12px; }
         .date-box.active { background: var(--primary); color: white; }
 
-        /* 佈局容器 */
         .timeline-container { display: flex; padding: 10px 5px; position: relative; }
         
-        /* 小時軸 */
-        .hour-axis { width: 45px; flex-shrink: 0; border-right: 1px solid #eee; }
+        /* 1. 非拖動時完全隱藏小時軸 */
+        .hour-axis { width: 0; flex-shrink: 0; transition: width 0.2s; overflow: hidden; border-right: none; }
+        body.dragging .hour-axis { width: 40px; border-right: 1px solid #eee; }
+
         .axis-label { 
-            font-size: 11px; color: #bbb; font-weight: bold;
-            display: flex; align-items: center; justify-content: center;
+            height: calc(var(--slot-h) * 4);
+            display: flex; align-items: flex-start; justify-content: center;
+            font-size: 11px; color: #bbb; padding-top: 5px;
         }
 
-        /* 非拖拽模式下的軸樣式：配合縮排 */
-        body:not(.dragging) .axis-label { height: auto; margin-bottom: 15px; }
-        
-        /* 拖拽模式下的軸樣式：變成等比網格 */
-        body.dragging .axis-label { height: calc(var(--slot-h) * 4); border-bottom: 1px dashed #f0f0f0; }
-
         .drop-zone { flex-grow: 1; position: relative; }
+        
+        /* 拖動時顯示網格 */
         body.dragging .drop-zone {
             background-image: linear-gradient(#e0e0e0 1px, transparent 1px);
             background-size: 100% var(--slot-h);
-            min-height: 2400px;
+            min-height: 2000px;
         }
 
-        /* 行程卡片：非拖拽時使用 relative 縮排 */
         .event-card {
             background: white; border-radius: 14px; padding: 12px 15px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 5px solid var(--primary);
-            position: relative; margin-bottom: 8px; /* 控制非拖拽時的間距 */
+            position: relative; margin-bottom: 8px;
             cursor: grab; touch-action: none;
         }
 
-        /* 拖拽模式下的其餘卡片 */
-        body.dragging .event-card:not(.is-dragging) { opacity: 0.2; filter: grayscale(1); pointer-events: none; }
+        /* 4. 拖動時淡化顯示其他行程 */
+        body.dragging .event-card:not(.is-dragging) { 
+            position: absolute !important; /* 讓它們回到網格對應位置供參考 */
+            opacity: 0.15; 
+            filter: grayscale(1); 
+            z-index: 1;
+            width: 80%;
+        }
 
-        /* 拖拽中的卡片樣式 */
         .event-card.is-dragging {
-            position: absolute !important; width: calc(100% - 20px);
+            position: absolute !important; width: 85%;
             margin: 0 !important; z-index: 3000; pointer-events: none;
             box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-left-color: var(--danger);
         }
 
-        /* 左側指針核心代碼 */
         .drag-pointer {
             position: absolute; left: -15px; top: 50%; transform: translateY(-50%);
             width: 0; height: 0; 
-            border-top: 8px solid transparent;
-            border-bottom: 8px solid transparent;
-            border-right: 12px solid var(--danger);
-            display: none;
+            border-top: 8px solid transparent; border-bottom: 8px solid transparent;
+            border-right: 12px solid var(--danger); display: none;
         }
         .is-dragging .drag-pointer { display: block; }
 
         .drag-tooltip {
-            position: absolute; top: -45px; left: 50%; transform: translateX(-50%);
-            background: var(--danger); color: white; padding: 5px 12px;
-            border-radius: 10px; font-weight: bold; font-size: 14px; display: none;
+            position: absolute; top: -40px; left: 50%; transform: translateX(-50%);
+            background: var(--danger); color: white; padding: 4px 10px;
+            border-radius: 8px; font-weight: bold; font-size: 13px; display: none;
         }
         .is-dragging .drag-tooltip { display: block; }
 
@@ -89,11 +89,11 @@
 </head>
 <body onkeydown="if(event.key==='Escape') location.reload()">
 
-<div id="cancel-dropzone">❌ 放到此處取消拖拽</div>
+<div id="cancel-dropzone">❌ 放到此處取消變更</div>
 
 <header>
     <div onclick="location.href='index.html'" style="margin-right:15px; cursor:pointer;"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#76c7ff" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
-    <b style="font-size: 18px;">📅 行程 (DEV) <span class="version-tag">Ver. 0121-1700</span></b>
+    <b style="font-size: 18px;">📅 行程 (DEV) <span class="version-tag">Ver. 0121-1800</span></b>
 </header>
 
 <div class="date-selector" id="dateSelector"></div>
@@ -108,7 +108,7 @@
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbz7lrfOtPmZH7fqUwbiRk3KgHAwZATgi51VSt2YqFamEinhdaxRvzqpMSrtUq7PsAK0bQ/exec";
-    const SLOT_PX = 45;
+    const SLOT_PX = 32; // 3. 壓縮後的格高
     let allData = [], currentDay = "2026/03/01";
 
     async function loadData() {
@@ -133,11 +133,13 @@
 
         const dayData = allData.filter(item => (item.日期 || "").replace(/-/g, '/') === currentDay).sort((a,b) => a.時間.localeCompare(b.時間));
 
-        let lastH = -1;
         dayData.forEach((item) => {
-            const h = parseInt(item.時間.split(':')[0]);
             const card = document.createElement('div');
             card.className = 'event-card';
+            // 將原始時間寫入屬性，方便拖動時參考
+            const [h, m] = item.時間.split(':').map(Number);
+            card.dataset.originTop = (h * 60 + m) / 15 * SLOT_PX;
+
             card.innerHTML = `
                 <div class="drag-pointer"></div>
                 <div class="drag-tooltip"></div>
@@ -145,13 +147,6 @@
                 <h4 style="margin:5px 0">${item.標題}</h4>
             `;
             zone.appendChild(card);
-
-            const label = document.createElement('div');
-            label.className = 'axis-label';
-            label.innerText = (h !== lastH) ? String(h).padStart(2, '0') : "";
-            axis.appendChild(label);
-            lastH = h;
-
             setupDrag(card, item);
         });
     }
@@ -161,13 +156,12 @@
             listeners: {
                 start(event) {
                     const target = event.target;
-                    const zone = document.getElementById('dropZone');
                     const axis = document.getElementById('hourAxis');
                     
                     document.body.classList.add('dragging');
                     target.classList.add('is-dragging');
                     
-                    // 切換為等比例軸標籤
+                    // 1. & 2. 顯示小時軸並預設位置
                     axis.innerHTML = '';
                     for(let i=0; i<24; i++) {
                         const lbl = document.createElement('div');
@@ -176,21 +170,25 @@
                         axis.appendChild(lbl);
                     }
 
-                    // 校準滑鼠偏移量
+                    // 4. 同步其他卡片到網格位置作為參考
+                    document.querySelectorAll('.event-card:not(.is-dragging)').forEach(c => {
+                        c.style.top = c.dataset.originTop + "px";
+                    });
+
+                    // 修正滑鼠偏移量
                     const rect = target.getBoundingClientRect();
                     target.setAttribute('data-offset-y', event.clientY0 - rect.top);
+                    target.style.top = target.dataset.originTop + "px";
                 },
                 move(event) {
                     const target = event.target;
                     const zoneRect = document.getElementById('dropZone').getBoundingClientRect();
                     const offsetY = parseFloat(target.getAttribute('data-offset-y'));
                     
-                    // 精確計算 Top
                     let newTop = event.clientY - zoneRect.top - offsetY;
                     if(newTop < 0) newTop = 0;
                     target.style.top = newTop + "px";
 
-                    // 即時時間計算
                     const snappedTop = Math.round(newTop / SLOT_PX) * SLOT_PX;
                     const totalMins = (snappedTop / SLOT_PX) * 15;
                     const hh = Math.floor(totalMins / 60);
