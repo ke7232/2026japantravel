@@ -9,20 +9,13 @@
             --primary: #76c7ff; --bg: #f7f9fc;
             --slot-h: 32px; --danger: #ff7675;
         }
-        body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; overflow-x: hidden; scroll-behavior: smooth; }
+        body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; overflow-x: hidden; }
         header { background: white; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 5px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 2000; }
         .version-tag { font-size: 10px; color: #ff7675; font-weight: bold; margin-left: 8px; border: 1px solid #ff7675; padding: 2px 5px; border-radius: 4px; }
 
         .mode-toggle { padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: bold; border: 1px solid var(--primary); background: white; color: var(--primary); cursor: pointer; transition: 0.3s; }
         .mode-toggle.active { background: var(--danger); color: white; border-color: var(--danger); }
 
-        #cancel-dropzone {
-            position: fixed; top: -60px; left: 0; width: 100%; height: 60px;
-            background: var(--danger); color: white; display: flex; align-items: center; justify-content: center;
-            font-weight: bold; z-index: 2500; transition: 0.3s;
-        }
-        body.dragging #cancel-dropzone { top: 0; }
-        
         .date-selector { display: flex; overflow-x: auto; padding: 10px; gap: 8px; background: white; border-bottom: 1px solid #eee; position: sticky; top: 48px; z-index: 1999; scrollbar-width: none; }
         .date-box { min-width: 50px; padding: 8px; background: #fff; border: 1px solid #eee; border-radius: 12px; text-align: center; font-size: 12px; flex-shrink: 0; cursor: pointer; }
         .date-box.active { background: var(--primary); color: white; border-color: var(--primary); }
@@ -38,23 +31,18 @@
         }
 
         .drop-zone { flex-grow: 1; position: relative; }
-        body.edit-mode .drop-zone {
-            background-image: linear-gradient(#e0e0e0 1px, transparent 1px);
-            background-size: 100% var(--slot-h);
-            min-height: 2200px;
-        }
+        body.edit-mode .drop-zone { background-image: linear-gradient(#e0e0e0 1px, transparent 1px); background-size: 100% var(--slot-h); min-height: 2200px; }
 
         .event-card {
             background: white; border-radius: 16px; padding: 15px;
             box-shadow: 0 3px 10px rgba(0,0,0,0.05); border-left: 6px solid var(--primary);
-            position: relative; margin-bottom: 10px;
-            cursor: default; touch-action: pan-y;
+            position: relative; margin-bottom: 10px; transition: transform 0.2s, box-shadow 0.2s;
         }
-        body.edit-mode .event-card { cursor: grab !important; touch-action: none !important; border-style: solid; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
 
-        body.dragging .event-card:not(.is-dragging) { 
-            position: absolute !important; opacity: 0.4; filter: grayscale(0.5); z-index: 1; width: 80%; border: 1px dashed var(--primary);
-        }
+        /* 2. 長按啟動時的 Active 動作 */
+        .event-card.is-active { transform: scale(1.03); box-shadow: 0 10px 25px rgba(0,0,0,0.15); border-left-color: var(--danger); }
+
+        body.dragging .event-card:not(.is-dragging) { position: absolute !important; opacity: 0.4; filter: grayscale(0.5); z-index: 1; width: 80%; border: 1px dashed var(--primary); }
 
         .event-card.is-dragging {
             position: absolute !important; width: 85%; margin: 0 !important; z-index: 3000; pointer-events: none;
@@ -62,27 +50,19 @@
         }
 
         .card-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 12px; opacity: 0.3; }
-        .action-icon { font-size: 18px; cursor: pointer; }
-        .map-link { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; padding: 6px 12px; background: #e8f5e9; color: #2e7d32; border-radius: 10px; font-size: 12px; text-decoration: none; font-weight: bold; }
-
+        .card-content { font-size: 14px; color: #666; white-space: pre-wrap; margin-top: 8px; }
+        
         .drag-pointer { position: absolute; left: -14px; top: 0; width: 0; height: 0; border-top: 6px solid transparent; border-bottom: 6px solid transparent; border-right: 10px solid var(--danger); display: none; }
         .is-dragging .drag-pointer { display: block; }
         .drag-tooltip { position: absolute; top: -35px; left: 0; background: var(--danger); color: white; padding: 3px 8px; border-radius: 6px; font-weight: bold; font-size: 12px; display: none; }
         .is-dragging .drag-tooltip { display: block; }
 
         .add-fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; border: none; box-shadow: 0 8px 20px rgba(118,199,255,0.4); z-index: 2500; cursor: pointer; }
-        body.edit-mode .add-fab { display: none; } /* 編輯模式隱藏新增按鈕 */
-        
+        body.edit-mode .add-fab { display: none; }
         #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 30px; font-size: 12px; display: none; z-index: 5000; }
-        .card-time-tag { font-size: 12px; color: var(--primary); font-weight: 800; display: block; margin-bottom: 5px; }
-        .card-content { font-size: 14px; color: #666; white-space: pre-wrap; margin-top: 8px; line-height: 1.5; }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-        .modal { width: 88%; max-width: 360px; background: white; border-radius: 30px; padding: 25px; box-sizing: border-box; }
     </style>
 </head>
 <body onkeydown="if(event.key==='Escape') location.reload()">
-
-<div id="cancel-dropzone">❌ 放到此處取消變更</div>
 
 <header>
     <div style="display:flex; align-items:center;">
@@ -99,25 +79,7 @@
     <div class="drop-zone" id="dropZone"></div>
 </div>
 
-<button class="add-fab" onclick="openModal('add')">＋</button>
-
-<div id="modal-overlay" class="modal-overlay">
-    <div class="modal">
-        <h2 id="modalTitle" style="text-align:center; color:var(--primary); margin-top:0;">新增行程</h2>
-        <input type="hidden" id="oldDataKey">
-        <input type="text" id="fTitle" style="width:100%; padding:12px; margin:8px 0; border:1px solid #eee; border-radius:12px; box-sizing:border-box;" placeholder="行程標題">
-        <div style="display:flex; gap:10px; margin:8px 0;">
-            <select id="fHour" style="flex:1; padding:10px; border-radius:12px; border:1px solid #eee;"></select>
-            <select id="fMin" style="flex:1; padding:10px; border-radius:12px; border:1px solid #eee;"></select>
-        </div>
-        <textarea id="fContent" rows="4" style="width:100%; padding:12px; border:1px solid #eee; border-radius:12px; margin:8px 0; box-sizing:border-box;" placeholder="詳細備註..."></textarea>
-        <input type="text" id="fKeyword" style="width:100%; padding:12px; border:1px solid #eee; border-radius:12px; margin:8px 0; box-sizing:border-box;" placeholder="地圖關鍵字">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:15px;">
-            <button onclick="closeModal()" style="padding:12px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;">取消</button>
-            <button style="background:var(--primary); color:white; padding:12px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;" onclick="submitForm()">確認儲存</button>
-        </div>
-    </div>
-</div>
+<button class="add-fab" onclick="">＋</button>
 
 <div id="toast"></div>
 
@@ -130,36 +92,29 @@
     function updateVersionTag() {
         const now = new Date();
         const ver = `${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
-        document.getElementById('ver-stamp').innerText = `Ver. ${ver}`;
+        document.getElementById('ver-stamp').innerText = Ver. ${ver};
     }
 
     function toggleEditMode() {
         const btn = document.getElementById('toggleBtn');
         isEditMode = !isEditMode;
-        
         if(isEditMode) {
-            btn.innerText = "🔒 完成位置";
-            btn.classList.add('active');
+            btn.innerText = "🔒 完成位置"; btn.classList.add('active');
             document.body.classList.add('edit-mode');
-            showToast("✨ 調整模式已開啟，請拖動行程");
-            renderTimeline(); // 重新渲染以綁定拖拽
+            renderTimeline(); 
+            showToast("👆 長按行程 1 秒可開始搬移");
         } else {
-            btn.innerText = "🔓 調整位置";
-            btn.classList.remove('active');
+            btn.innerText = "🔓 調整位置"; btn.classList.remove('active');
             document.body.classList.remove('edit-mode');
             renderTimeline();
         }
     }
 
-    const hS = document.getElementById('fHour'), mS = document.getElementById('fMin');
-    for(let h=0; h<24; h++) hS.add(new Option(String(h).padStart(2,'0')+'時', String(h).padStart(2,'0')));
-    ['00','15','30','45'].forEach(m => mS.add(new Option(m+'分', m)));
-
     async function loadData() {
         const r = await fetch(GAS_URL + "?type=schedule");
         allData = await r.json();
         renderDates();
-        renderTimeline();
+        renderTimeline(true); // 首次載入執行自動對焦
     }
 
     function renderDates() {
@@ -167,21 +122,18 @@
         document.getElementById('dateSelector').innerHTML = dates.map(d => `<div class="date-box ${currentDay === d ? 'active' : ''}" onclick="setDay('${d}')">${d.split('/')[1]}/${d.split('/')[2]}</div>`).join('');
     }
 
-    function setDay(d) { currentDay = d; renderDates(); renderTimeline(); }
+    function setDay(d) { currentDay = d; renderDates(); renderTimeline(true); }
 
-    function renderTimeline() {
+    function renderTimeline(autoFocus = false) {
         const zone = document.getElementById('dropZone');
         const axis = document.getElementById('hourAxis');
         zone.innerHTML = ''; axis.innerHTML = '';
         document.body.classList.remove('dragging');
-        
-        interact('.event-card').unset(); // 徹底清除舊綁定
+        interact('.event-card').unset();
 
         const dayData = allData.filter(item => (item.日期 || "").replace(/-/g, '/') === currentDay).sort((a,b) => a.時間.localeCompare(b.時間));
 
-        // 如果是編輯模式，先初始化小時軸
         if(isEditMode) {
-            axis.innerHTML = '';
             for(let i=0; i<24; i++) {
                 const lbl = document.createElement('div'); lbl.className = 'axis-label';
                 lbl.innerText = String(i).padStart(2,'0'); axis.appendChild(lbl);
@@ -194,42 +146,50 @@
             const [h, m] = item.時間.split(':').map(Number);
             card.dataset.originTop = (h * 60 + m) / 15 * SLOT_PX;
             
-            const keyword = item["Google map keyword"] || "";
-            const mapHtml = keyword ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(keyword)}" class="map-link" target="_blank">📍 導覽地圖</a>` : "";
-            const safeItem = JSON.stringify(item).replace(/"/g, '&quot;');
-
             card.innerHTML = `
-                <div class="drag-pointer"></div>
-                <div class="drag-tooltip"></div>
+                <div class="drag-pointer"></div><div class="drag-tooltip"></div>
                 <div class="card-actions">
-                    <span class="action-icon" onclick="openModal('edit', ${safeItem})">✏️</span>
-                    <span class="action-icon" onclick="handleDelete('${item.時間}','${item.標題}')">🗑️</span>
+                    <span style="font-size:16px;">✏️</span>
                 </div>
-                <span class="card-time-tag">🕙 ${item.時間}</span>
+                <span style="font-size:12px; color:var(--primary); font-weight:800;">🕙 ${item.時間}</span>
                 <h4 style="margin:5px 0">${item.標題}</h4>
                 <div class="card-content">${item.內容 || ''}</div>
-                ${mapHtml}
             `;
             zone.appendChild(card);
-
-            // 調整模式下：固定位置並綁定拖拽
             if(isEditMode) {
-                card.style.position = 'absolute';
-                card.style.top = card.dataset.originTop + "px";
-                card.style.width = "calc(100% - 20px)";
+                card.style.position = 'absolute'; card.style.top = card.dataset.originTop + "px"; card.style.width = "calc(100% - 20px)";
                 setupDrag(card, item);
             }
         });
+
+        // 1. 自動捲動邏輯
+        if (autoFocus) {
+            setTimeout(() => {
+                const now = new Date();
+                const currentMins = now.getHours() * 60 + now.getMinutes();
+                const scrollY = (currentMins / 15 * SLOT_PX);
+                
+                // 如果當前時間點已經在第一個行程之後，才執行捲動
+                const firstItemMins = dayData.length > 0 ? parseInt(dayData[0].時間.split(':')[0]) * 60 : 0;
+                if (currentMins > firstItemMins) {
+                    window.scrollTo({ top: scrollY + 50, behavior: 'smooth' });
+                    showToast(`📍 已對焦至現在時間 ${now.getHours()}:${now.getMinutes()}`);
+                }
+            }, 300);
+        }
     }
 
     function setupDrag(el, item) {
         interact(el).draggable({
+            // 2. 核心：長按 1000ms 才啟動拖拽
+            hold: 1000, 
             listeners: {
                 start(event) {
                     document.body.classList.add('dragging');
-                    event.target.classList.add('is-dragging');
-                    const scrollY = parseFloat(event.target.dataset.originTop);
-                    window.scrollTo({ top: scrollY + 50, behavior: 'smooth' });
+                    event.target.classList.add('is-dragging', 'is-active');
+                    document.querySelectorAll('.event-card:not(.is-dragging)').forEach(c => {
+                        c.style.top = c.dataset.originTop + "px";
+                    });
                 },
                 move(event) {
                     const target = event.target;
@@ -237,26 +197,20 @@
                     let newTop = event.clientY - zoneRect.top;
                     if(newTop < 0) newTop = 0;
                     target.style.top = newTop + "px";
-
                     const snappedTop = Math.round(newTop / SLOT_PX) * SLOT_PX;
                     const totalMins = (snappedTop / SLOT_PX) * 15;
-                    const hh = Math.floor(totalMins / 60);
-                    const mm = totalMins % 60;
-                    target.querySelector('.drag-tooltip').innerText = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+                    target.querySelector('.drag-tooltip').innerText = ${String(Math.floor(totalMins/60)).padStart(2,'0')}:${String(totalMins%60).padStart(2,'0')};
                 },
                 async end(event) {
-                    if (event.clientY < 60) { renderTimeline(); return; }
                     const target = event.target;
-                    const finalTop = parseFloat(target.style.top);
-                    const snappedTop = Math.round(finalTop / SLOT_PX) * SLOT_PX;
+                    target.classList.remove('is-active');
+                    if (event.clientY < 60) { renderTimeline(); return; }
+                    const snappedTop = Math.round(parseFloat(target.style.top) / SLOT_PX) * SLOT_PX;
                     const totalMins = (snappedTop / SLOT_PX) * 15;
-                    const newTime = `${String(Math.floor(totalMins / 60)).padStart(2,'0')}:${String(totalMins % 60).padStart(2,'0')}`;
-                    if (newTime !== item.時間 && totalMins < 1440) {
-                        showToast(`🚀 移動至 ${newTime}...`);
-                        await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({
-                            action: "edit", date: currentDay, oldTime: item.時間, oldTitle: item.標題,
-                            time: newTime, title: item.標題, content: item.內容, keyword: item["Google map keyword"] || ""
-                        })});
+                    const newTime = ${String(Math.floor(totalMins/60)).padStart(2,'0')}:${String(totalMins%60).padStart(2,'0')};
+                    if (newTime !== item.時間) {
+                        showToast(🚀 同步至 ${newTime}...);
+                        await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "edit", date: currentDay, oldTime: item.時間, oldTitle: item.標題, time: newTime, title: item.標題, content: item.內容 })});
                         setTimeout(loadData, 1000);
                     } else { renderTimeline(); }
                 }
@@ -264,36 +218,6 @@
         });
     }
 
-    function openModal(mode, item = null) {
-        isEditOnModal = (mode === 'edit');
-        document.getElementById('modalTitle').innerText = isEditOnModal ? "編輯行程 ✏️" : "新增行程 📝";
-        if (isEditOnModal && item) {
-            document.getElementById('fTitle').value = item.標題;
-            document.getElementById('fContent').value = item.內容;
-            document.getElementById('fKeyword').value = item["Google map keyword"] || "";
-            const [h, m] = item.時間.split(':');
-            document.getElementById('fHour').value = h; document.getElementById('fMin').value = m;
-            document.getElementById('oldDataKey').value = JSON.stringify({oldTime: item.時間, oldTitle: item.標題});
-        } else {
-            document.getElementById('fTitle').value = ""; document.getElementById('fContent').value = "";
-            document.getElementById('fKeyword').value = ""; document.getElementById('oldDataKey').value = "";
-        }
-        document.getElementById('modal-overlay').style.display = 'flex';
-    }
-    function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
-    async function submitForm() {
-        const payload = { action: (document.getElementById('oldDataKey').value ? "edit" : "add"), date: currentDay, time: `${document.getElementById('fHour').value}:${document.getElementById('fMin').value}`, title: document.getElementById('fTitle').value, content: document.getElementById('fContent').value, keyword: document.getElementById('fKeyword').value };
-        if (payload.action === 'edit') { const old = JSON.parse(document.getElementById('oldDataKey').value); payload.oldTime = old.oldTime; payload.oldTitle = old.oldTitle; }
-        closeModal(); showToast("⏳ 正在儲存...");
-        await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
-        setTimeout(loadData, 1000);
-    }
-    async function handleDelete(time, title) {
-        if(!confirm("確定要刪除嗎？")) return;
-        showToast("🗑️ 正在刪除...");
-        await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({action:"delete", date:currentDay, time, title}) });
-        setTimeout(loadData, 1000);
-    }
     function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2500); }
     window.onload = () => { updateVersionTag(); loadData(); };
 </script>
