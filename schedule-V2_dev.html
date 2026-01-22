@@ -3,137 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>每日行程 (DEV V2)</title>
+    <title>每日行程 (V2 PRO)</title>
     <style>
         :root { 
-            --primary: #6c5ce7; /* 深紫色調 */
-            --primary-light: #a29bfe;
-            --bg: #f8f9fd;
+            --primary: #5c4ee5; /* 更深的精緻紫色 */
+            --bg: #f5f6fa;
             --slot-h: 32px;
             --danger: #ff7675;
         }
         body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; overflow-x: hidden; }
         
-        /* 影片風格的紫色頂部區域 */
+        /* 頂部紫色區域 */
         .top-container {
             background: var(--primary);
-            padding-bottom: 15px;
-            border-radius: 0 0 30px 30px; /* 底部大圓角 */
-            position: sticky;
-            top: 0;
-            z-index: 2000;
-            box-shadow: 0 4px 20px rgba(108, 92, 231, 0.2);
+            padding-bottom: 25px;
+            border-radius: 0 0 35px 35px;
+            position: sticky; top: 0; z-index: 2000;
+            box-shadow: 0 8px 30px rgba(92, 78, 229, 0.2);
         }
 
         header { 
-            background: transparent; /* 改為透明 */
-            padding: 15px 20px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            color: white;
+            padding: 15px 20px 10px; 
+            display: flex; align-items: center; justify-content: space-between; color: white;
         }
-        .version-tag { font-size: 10px; background: rgba(255,255,255,0.2); color: white; margin-left: 8px; border: 1px solid rgba(255,255,255,0.4); padding: 1px 5px; border-radius: 4px; }
+        .version-tag { font-size: 9px; background: rgba(255,255,255,0.2); color: white; margin-left: 8px; padding: 1px 4px; border-radius: 4px; }
 
-        .mode-toggle { 
-            padding: 6px 14px; 
-            border-radius: 15px; 
-            font-size: 12px; 
-            font-weight: bold; 
-            border: 1px solid rgba(255,255,255,0.5); 
-            background: rgba(255,255,255,0.1); 
-            color: white; 
-            cursor: pointer; 
-            backdrop-filter: blur(5px);
+        /* 天氣資訊區塊 */
+        .weather-info {
+            background: rgba(255, 255, 255, 0.12);
+            margin: 0 20px 20px; padding: 15px 20px;
+            border-radius: 25px; display: flex; justify-content: space-between; align-items: center;
+            color: white; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .mode-toggle.active { background: var(--danger); border-color: var(--danger); }
 
-        /* 日期選擇器：白色圓角風格 */
-        .date-selector { 
-            display: flex; 
-            overflow-x: auto; 
-            padding: 0 15px; 
-            gap: 10px; 
-            scrollbar-width: none; 
-        }
+        /* 關鍵：方形標籤日期選擇器 */
+        .date-selector { display: flex; overflow-x: auto; padding: 0 20px; gap: 12px; scrollbar-width: none; }
         .date-box { 
-            min-width: 55px; 
-            padding: 10px 5px; 
-            background: rgba(255,255,255,0.15); /* 半透明白 */
-            border: none; 
-            border-radius: 18px; 
-            text-align: center; 
-            font-size: 13px; 
-            color: rgba(255,255,255,0.8);
-            flex-shrink: 0;
-            transition: 0.3s;
+            min-width: 65px; padding: 12px 5px; 
+            background: rgba(255,255,255,0.1); 
+            border-radius: 20px; text-align: center; 
+            color: rgba(255,255,255,0.6); flex-shrink: 0; transition: 0.3s;
         }
-        .date-box.active { 
-            background: white; 
-            color: var(--primary); 
-            font-weight: bold; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
-        }
-
-        .timeline-container { display: flex; padding: 20px 5px; position: relative; }
-        .hour-axis { width: 0; flex-shrink: 0; overflow: hidden; }
-        body.edit-mode .hour-axis { width: 45px; border-right: 1px solid #eee; }
+        .date-box .day-num { font-size: 11px; display: block; margin-bottom: 2px; }
+        .date-box .day-id { font-size: 16px; font-weight: 800; }
         
-        .axis-label { 
-            height: calc(var(--slot-h) * 4); 
-            display: flex; align-items: flex-start; justify-content: center;
-            font-size: 12px; color: #888; font-weight: 800;
-            padding-top: 5px; border-bottom: 1px dashed #eee; box-sizing: border-box; 
+        .date-box.active { 
+            background: white; color: var(--primary); 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); transform: translateY(-3px);
         }
 
-        .drop-zone { flex-grow: 1; position: relative; }
-        body.edit-mode .drop-zone { background-image: linear-gradient(#e0e0e0 1px, transparent 1px); background-size: 100% var(--slot-h); min-height: 2200px; }
+        /* 時間軸與卡片設計 */
+        .timeline-container { display: flex; padding: 25px 15px; position: relative; }
+        .hour-axis { width: 0; flex-shrink: 0; overflow: hidden; transition: 0.3s; }
+        body.edit-mode .hour-axis { width: 45px; border-right: 1px solid #ddd; margin-right: 10px; }
 
         .event-card {
-            background: white; border-radius: 20px; padding: 18px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.04); border-left: 6px solid var(--primary);
-            position: relative; margin-bottom: 12px; transition: transform 0.2s, box-shadow 0.2s;
+            background: white; border-radius: 28px; padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
+            display: flex; gap: 18px; align-items: center;
+            position: relative; margin-bottom: 18px; transition: 0.3s;
         }
 
-        body.edit-mode .card-detail, body.edit-mode .card-actions { display: none; }
-        body.edit-mode .event-card { padding: 10px 15px; }
+        /* 左側時間方塊 */
+        .card-time-block {
+            background: #f8f9fb; border-radius: 18px;
+            min-width: 75px; height: 75px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #333; flex-shrink: 0;
+        }
+        .time-period { font-size: 10px; color: #888; font-weight: bold; margin-bottom: 2px; }
+        .time-hm { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; }
 
-        /* 2秒進度條 */
-        .unlock-bar-bg { position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: #eee; border-radius: 0 0 20px 20px; display: none; overflow: hidden; }
+        .card-main { flex-grow: 1; }
+        .card-title { font-size: 17px; font-weight: 800; color: #2d3436; margin: 0 0 5px; }
+        .card-loc { font-size: 12px; color: var(--primary); display: flex; align-items: center; gap: 4px; font-weight: bold; }
+
+        /* 調整模式下的簡化 */
+        body.edit-mode .card-detail, body.edit-mode .card-actions, body.edit-mode .card-loc { display: none; }
+        body.edit-mode .event-card { padding: 12px 20px; }
+        body.edit-mode .card-time-block { height: 50px; min-width: 60px; }
+
+        /* 2秒長按解鎖 */
+        .unlock-bar-bg { position: absolute; bottom: 0; left: 0; width: 100%; height: 5px; background: #eee; border-radius: 0 0 28px 28px; display: none; overflow: hidden; }
         .unlock-bar-fill { width: 0%; height: 100%; background: var(--danger); }
         .is-holding .unlock-bar-bg { display: block; }
         .is-holding .unlock-bar-fill { animation: fillProgress 2s linear forwards; }
         @keyframes fillProgress { from { width: 0%; } to { width: 100%; } }
 
-        .event-card.is-active { transform: scale(1.05); box-shadow: 0 12px 30px rgba(0,0,0,0.15); border-left-color: var(--danger) !important; z-index: 3500; }
+        .event-card.is-active { transform: scale(1.05); border: 2px solid var(--danger); z-index: 3000; }
         
-        .card-actions { position: absolute; top: 15px; right: 15px; display: flex; gap: 12px; opacity: 0.3; }
-        .action-icon { font-size: 18px; cursor: pointer; }
-        .add-fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; border: none; box-shadow: 0 8px 20px rgba(108, 92, 231, 0.4); z-index: 2500; cursor: pointer; }
+        .card-actions { position: absolute; top: 15px; right: 15px; display: flex; gap: 10px; opacity: 0.1; }
+        .event-card:hover .card-actions { opacity: 1; }
+        
+        .add-fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; border: none; box-shadow: 0 8px 30px rgba(92, 78, 229, 0.4); z-index: 2500; }
         body.edit-mode .add-fab { display: none; }
-
-        .card-time-tag { font-size: 12px; color: var(--primary); font-weight: 800; display: block; margin-bottom: 5px; }
-        .card-content { font-size: 14px; color: #666; white-space: pre-wrap; margin-top: 8px; line-height: 1.6; }
-        .map-link { display: inline-flex; align-items: center; gap: 5px; margin-top: 12px; padding: 7px 14px; background: #f0f1ff; color: var(--primary); border-radius: 12px; font-size: 12px; text-decoration: none; font-weight: bold; }
-
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 4000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-        .modal { width: 90%; max-width: 380px; background: white; border-radius: 35px; padding: 30px; box-sizing: border-box; }
-        #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 12px 24px; border-radius: 30px; font-size: 13px; display: none; z-index: 5000; }
     </style>
 </head>
-<body onkeydown="if(event.key==='Escape') location.reload()">
+<body>
 
 <div class="top-container">
     <header>
         <div style="display:flex; align-items:center;">
-            <div onclick="location.href='index.html'" style="margin-right:12px; cursor:pointer;">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            </div>
-            <b style="font-size: 18px;">行程規劃 <span class="version-tag">Ver. 0121-2330</span></b>
+            <div onclick="location.href='index.html'"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+            <b style="margin-left:12px; font-size: 18px;">東京冬旅 <span class="version-tag">Ver. 0123-0010</span></b>
         </div>
-        <button id="toggleBtn" class="mode-toggle" onclick="toggleEditMode()">調整位置</button>
+        <button id="toggleBtn" style="padding: 6px 14px; border-radius: 15px; font-size: 11px; font-weight: bold; border: 1px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.15); color: white;" onclick="toggleEditMode()">調整位置</button>
     </header>
+
+    <div class="weather-info">
+        <div><b id="displayDate">03/01 (週日)</b><br><small style="opacity:0.7">富士山一日遊 & 東京車站夜景</small></div>
+        <div style="display:flex; align-items:center; gap:8px;"><span style="font-size:24px">☀️</span><b style="font-size:22px">11°</b></div>
+    </div>
 
     <div class="date-selector" id="dateSelector"></div>
 </div>
@@ -145,25 +125,7 @@
 
 <button class="add-fab" onclick="openModal('add')">＋</button>
 
-<div id="modal-overlay" class="modal-overlay">
-    <div class="modal">
-        <h2 id="modalTitle" style="text-align:center; color:var(--primary); margin-top:0;">行程細節</h2>
-        <input type="hidden" id="oldDataKey">
-        <input type="text" id="fTitle" style="width:100%; padding:14px; margin:10px 0; border:1px solid #eee; border-radius:15px; box-sizing:border-box; background:#f9f9f9;" placeholder="行程標題">
-        <div style="display:flex; gap:10px; margin:10px 0;">
-            <select id="fHour" style="flex:1; padding:12px; border-radius:15px; border:1px solid #eee; background:#f9f9f9;"></select>
-            <select id="fMin" style="flex:1; padding:12px; border-radius:15px; border:1px solid #eee; background:#f9f9f9;"></select>
-        </div>
-        <textarea id="fContent" rows="4" style="width:100%; padding:14px; border:1px solid #eee; border-radius:15px; margin:10px 0; box-sizing:border-box; background:#f9f9f9;" placeholder="有什麼需要備註的嗎？"></textarea>
-        <input type="text" id="fKeyword" style="width:100%; padding:14px; border:1px solid #eee; border-radius:15px; margin:10px 0; box-sizing:border-box; background:#f9f9f9;" placeholder="地圖搜尋關鍵字">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-top:20px;">
-            <button onclick="closeModal()" style="padding:14px; border-radius:15px; border:none; font-weight:bold; cursor:pointer; background:#eee;">取消</button>
-            <button style="background:var(--primary); color:white; padding:14px; border-radius:15px; border:none; font-weight:bold; cursor:pointer;" onclick="submitForm()">儲存行程</button>
-        </div>
-    </div>
-</div>
-
-<div id="toast"></div>
+<div id="toast" style="position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 12px 25px; border-radius: 30px; font-size: 13px; display: none; z-index: 5000;"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <script>
@@ -171,32 +133,34 @@
     const SLOT_PX = 32; 
     let allData = [], currentDay = "2026/03/01", isEditMode = false;
 
-    const hS = document.getElementById('fHour'), mS = document.getElementById('fMin');
-    for(let h=0; h<24; h++) hS.add(new Option(String(h).padStart(2,'0')+'時', String(h).padStart(2,'0')));
-    ['00','15','30','45'].forEach(m => mS.add(new Option(m+'分', m)));
-
     function toggleEditMode() {
         isEditMode = !isEditMode;
         const btn = document.getElementById('toggleBtn');
         if(isEditMode) { 
-            btn.innerText = "完成"; btn.classList.add('active'); 
+            btn.innerText = "完成"; btn.style.background = "#ff7675";
             document.body.classList.add('edit-mode');
-            showToast("✨ 調整模式：長按卡片 2 秒開始搬移");
         } else { 
-            btn.innerText = "調整位置"; btn.classList.remove('active'); 
+            btn.innerText = "調整位置"; btn.style.background = "rgba(255,255,255,0.15)";
             document.body.classList.remove('edit-mode');
         }
         renderTimeline();
     }
 
     async function loadData() {
-        try { const r = await fetch(GAS_URL + "?type=schedule"); allData = await r.json(); renderDates(); renderTimeline(true); }
-        catch(e) { showToast("❌ 資料載入失敗"); }
+        const r = await fetch(GAS_URL + "?type=schedule");
+        allData = await r.json();
+        renderDates();
+        renderTimeline(true);
     }
 
     function renderDates() {
         const dates = ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04", "2026/03/05", "2026/03/06"];
-        document.getElementById('dateSelector').innerHTML = dates.map(d => `<div class="date-box ${currentDay === d ? 'active' : ''}" onclick="setDay('${d}')">${d.split('/')[1]}/${d.split('/')[2]}</div>`).join('');
+        document.getElementById('dateSelector').innerHTML = dates.map((d, i) => `
+            <div class="date-box ${currentDay === d ? 'active' : ''}" onclick="setDay('${d}')">
+                <span class="day-num">${d.split('/')[1]}/${d.split('/')[2]}</span>
+                <span class="day-id">D${i+1}</span>
+            </div>
+        `).join('');
     }
 
     function setDay(d) { currentDay = d; renderDates(); renderTimeline(true); }
@@ -210,54 +174,40 @@
 
         const dayData = allData.filter(item => (item.日期 || "").replace(/-/g, '/') === currentDay).sort((a,b) => a.時間.localeCompare(b.時間));
 
-        if(isEditMode) {
-            for(let i=0; i<24; i++) {
-                const lbl = document.createElement('div'); lbl.className = 'axis-label';
-                lbl.innerText = String(i).padStart(2,'0'); axis.appendChild(lbl);
-            }
-        }
-
         dayData.forEach((item) => {
             const card = document.createElement('div');
             card.className = 'event-card';
             const [h, m] = item.時間.split(':').map(Number);
             card.dataset.originTop = ((h * 60 + m) / 15) * SLOT_PX;
             
-            const keyword = item["Google map keyword"] || "";
-            const mapHtml = keyword ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(keyword)}" class="map-link" target="_blank">📍 導覽地圖</a>` : "";
-            const safeItem = JSON.stringify(item).replace(/"/g, '&quot;');
+            const period = h < 12 ? "上午" : "下午";
+            const safeItem = JSON.stringify(item).replace(/"/g, '"');
 
             card.innerHTML = `
-                <div class="card-actions">
-                    <span class="action-icon" onclick='openModal("edit", ${safeItem})'>✏️</span>
-                    <span class="action-icon" onclick="handleDelete('${item.時間}','${item.標題}')">🗑️</span>
+                <div class="card-time-block">
+                    <span class="time-period">${period}</span>
+                    <span class="time-hm">${item.時間}</span>
                 </div>
-                <span class="card-time-tag">🕙 ${item.時間}</span>
-                <h4 style="margin:5px 0; font-size:16px; color:#333;">${item.標題}</h4>
-                <div class="card-detail">
-                    <div class="card-content">${item.內容 || ''}</div>
-                    ${mapHtml}
+                <div class="card-main">
+                    <h4 class="card-title">${item.標題}</h4>
+                    <div class="card-loc">📍 ${item["Google map keyword"] || '未設定地點'}</div>
+                    <div class="card-detail" style="font-size:13px; color:#777; margin-top:8px;">${item.內容 || ''}</div>
+                </div>
+                <div class="card-actions">
+                    <span onclick='openModal("edit", ${safeItem})'>✏️</span>
+                    <span onclick="handleDelete('${item.時間}','${item.標題}')">🗑️</span>
                 </div>
                 <div class="unlock-bar-bg"><div class="unlock-bar-fill"></div></div>
             `;
             zone.appendChild(card);
             
             if(isEditMode) {
-                card.style.position = 'absolute'; card.style.top = card.dataset.originTop + "px"; card.style.width = "calc(100% - 20px)";
+                card.style.position = 'absolute'; card.style.top = card.dataset.originTop + "px"; card.style.width = "calc(100% - 30px)";
                 setupDrag(card, item);
                 card.onpointerdown = () => card.classList.add('is-holding');
                 card.onpointerup = card.onpointerleave = () => card.classList.remove('is-holding');
             }
         });
-
-        if (autoFocus && dayData.length > 0) {
-            setTimeout(() => {
-                const now = new Date();
-                const currentMins = now.getHours() * 60 + now.getMinutes();
-                const scrollY = (currentMins / 15 * SLOT_PX);
-                if (currentMins > parseInt(dayData[0].時間.split(':')[0]) * 60) window.scrollTo({ top: scrollY - 100, behavior: 'smooth' });
-            }, 500);
-        }
     }
 
     function setupDrag(el, item) {
@@ -267,63 +217,28 @@
                 start(event) {
                     document.body.classList.add('dragging');
                     event.target.classList.add('is-active');
-                    document.querySelectorAll('.event-card:not(.is-active)').forEach(c => c.style.opacity = "0.3");
                 },
                 move(event) {
                     const target = event.target;
                     const zoneRect = document.getElementById('dropZone').getBoundingClientRect();
                     let newTop = event.clientY - zoneRect.top;
-                    if(newTop < 0) newTop = 0;
                     target.style.top = newTop + "px";
                 },
                 async end(event) {
                     const target = event.target;
-                    const finalTop = parseFloat(target.style.top);
-                    const snappedTop = Math.round(finalTop / SLOT_PX) * SLOT_PX;
+                    const snappedTop = Math.round(parseFloat(target.style.top) / SLOT_PX) * SLOT_PX;
                     const totalMins = (snappedTop / SLOT_PX) * 15;
                     const newTime = `${String(Math.floor(totalMins / 60)).padStart(2,'0')}:${String(totalMins % 60).padStart(2,'0')}`;
                     
-                    if (newTime !== item.時間 && totalMins < 1440) {
-                        showToast(`🚀 同步至 ${newTime}...`);
+                    if (newTime !== item.時間) {
                         await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "edit", date: currentDay, oldTime: item.時間, oldTitle: item.標題, time: newTime, title: item.標題, content: item.內容 })});
-                        setTimeout(loadData, 1000);
+                        loadData();
                     } else { renderTimeline(); }
                 }
             }
         });
     }
 
-    function openModal(mode, item = null) {
-        const isEdit = (mode === 'edit');
-        document.getElementById('modalTitle').innerText = isEdit ? "編輯行程" : "新增行程";
-        if (isEdit && item) {
-            document.getElementById('fTitle').value = item.標題; document.getElementById('fContent').value = item.內容;
-            document.getElementById('fKeyword').value = item["Google map keyword"] || "";
-            const [h, m] = item.時間.split(':'); document.getElementById('fHour').value = h; document.getElementById('fMin').value = m;
-            document.getElementById('oldDataKey').value = JSON.stringify({oldTime: item.時間, oldTitle: item.標題});
-        } else {
-            document.getElementById('fTitle').value = ""; document.getElementById('fContent').value = "";
-            document.getElementById('fKeyword').value = ""; document.getElementById('oldDataKey').value = "";
-            document.getElementById('fHour').value = "10"; document.getElementById('fMin').value = "00";
-        }
-        document.getElementById('modal-overlay').style.display = 'flex';
-    }
-    function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
-    async function submitForm() {
-        const isEdit = !!document.getElementById('oldDataKey').value;
-        const payload = { action: isEdit ? "edit" : "add", date: currentDay, time: `${document.getElementById('fHour').value}:${document.getElementById('fMin').value}`, title: document.getElementById('fTitle').value, content: document.getElementById('fContent').value, keyword: document.getElementById('fKeyword').value };
-        if (isEdit) { const old = JSON.parse(document.getElementById('oldDataKey').value); payload.oldTime = old.oldTime; payload.oldTitle = old.oldTitle; }
-        closeModal(); showToast("⏳ 儲存中...");
-        await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
-        setTimeout(loadData, 1200);
-    }
-    async function handleDelete(time, title) {
-        if(!confirm("確定要刪除嗎？")) return;
-        showToast("🗑️ 刪除中...");
-        await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({action:"delete", date:currentDay, time, title}) });
-        setTimeout(loadData, 1200);
-    }
-    function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
     window.onload = loadData;
 </script>
 </body>
