@@ -13,23 +13,24 @@
         }
         body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; overflow-x: hidden; }
         
+        /* 修正 2: 縮小底部間距 */
         .top-container {
             background: var(--primary);
-            padding-bottom: 25px;
+            padding-bottom: 15px; /* 從 25px 縮小到 15px */
             border-radius: 0 0 35px 35px;
             position: sticky; top: 0; z-index: 2000;
-            box-shadow: 0 8px 30px rgba(92, 78, 229, 0.2);
+            box-shadow: 0 8px 30px rgba(92, 78, 229, 0.15);
         }
 
         header { 
-            padding: 15px 20px; 
+            padding: 15px 20px 5px; 
             display: flex; align-items: center; justify-content: space-between; color: white;
         }
         .version-tag { font-size: 9px; background: rgba(255,255,255,0.2); color: white; margin-left: 8px; padding: 1px 4px; border-radius: 4px; }
 
         .date-selector { display: flex; overflow-x: auto; padding: 10px 20px; gap: 12px; scrollbar-width: none; }
         .date-box { 
-            min-width: 65px; padding: 12px 5px; 
+            min-width: 65px; padding: 10px 5px; 
             background: rgba(255,255,255,0.1); 
             border-radius: 20px; text-align: center; 
             color: rgba(255,255,255,0.6); flex-shrink: 0; transition: 0.3s;
@@ -38,7 +39,7 @@
         .date-box .day-id { font-size: 16px; font-weight: 800; }
         .date-box.active { background: white; color: var(--primary); box-shadow: 0 10px 20px rgba(0,0,0,0.1); transform: translateY(-3px); }
 
-        .timeline-container { display: flex; padding: 25px 15px; position: relative; }
+        .timeline-container { display: flex; padding: 20px 15px; position: relative; }
         .hour-axis { width: 0; flex-shrink: 0; overflow: hidden; }
         body.edit-mode .hour-axis { width: 45px; border-right: 1px solid #ddd; margin-right: 10px; }
         .axis-label { height: calc(var(--slot-h) * 4); display: flex; align-items: flex-start; justify-content: center; font-size: 12px; color: #888; font-weight: 800; padding-top: 5px; border-bottom: 1px dashed #eee; box-sizing: border-box; }
@@ -70,14 +71,15 @@
         body.edit-mode .event-card { padding: 12px 20px; }
         body.edit-mode .card-time-block { height: 50px; min-width: 60px; }
 
-        /* 拖拽即時時間氣泡 */
+        /* 修正 4: 拖拽即時時間氣泡 */
         .drag-tooltip {
-            position: absolute; top: -35px; left: 0;
+            position: absolute; top: -35px; left: 50%; transform: translateX(-50%);
             background: var(--danger); color: white; padding: 4px 10px;
             border-radius: 8px; font-weight: bold; font-size: 13px; display: none;
             z-index: 5000;
         }
-        .is-active .drag-tooltip { display: block; }
+        /* 只有在 active (長按解鎖後) 才顯示 tooltip */
+        .event-card.is-active .drag-tooltip { display: block; }
 
         .unlock-bar-bg { position: absolute; bottom: 0; left: 0; width: 100%; height: 5px; background: #eee; border-radius: 0 0 28px 28px; display: none; overflow: hidden; }
         .unlock-bar-fill { width: 0%; height: 100%; background: var(--danger); }
@@ -89,6 +91,7 @@
         .card-actions { position: absolute; top: 15px; right: 15px; display: flex; gap: 10px; opacity: 0.1; }
         .event-card:hover .card-actions { opacity: 1; }
         
+        /* 修正 3: 地圖按鈕回歸 */
         .map-link { 
             display: inline-flex; align-items: center; gap: 5px; 
             margin-top: 12px; padding: 7px 14px; background: #f2f3ff; 
@@ -106,8 +109,13 @@
 <div class="top-container">
     <header>
         <div style="display:flex; align-items:center;">
-            <div onclick="location.href='index.html'"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
-            <b style="margin-left:12px; font-size: 18px;">❄️ 輕井澤。東京 <span class="version-tag">Ver. 0123-0020</span></b>
+            <div onclick="location.href='index.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
+            <div style="display:flex; align-items:center; margin-left:12px;">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="white" style="margin-right:8px;">
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                </svg>
+                <b style="font-size: 18px; color:white;">輕井澤。東京 <span class="version-tag">Ver. 0123-0030</span></b>
+            </div>
         </div>
         <button id="toggleBtn" style="padding: 6px 14px; border-radius: 15px; font-size: 11px; font-weight: bold; border: 1px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.15); color: white;" onclick="toggleEditMode()">調整位置</button>
     </header>
@@ -120,7 +128,7 @@
     <div class="drop-zone" id="dropZone"></div>
 </div>
 
-<button class="add-fab" onclick="openModal('add')">＋</button>
+<button class="add-fab" onclick="">＋</button>
 
 <div id="toast"></div>
 
@@ -171,7 +179,6 @@
 
         const dayData = allData.filter(item => (item.日期 || "").replace(/-/g, '/') === currentDay).sort((a,b) => a.時間.localeCompare(b.時間));
 
-        // 調整模式下生成小時軸
         if(isEditMode) {
             for(let i=0; i<24; i++) {
                 const lbl = document.createElement('div'); lbl.className = 'axis-label';
@@ -188,7 +195,6 @@
             const period = h < 12 ? "上午" : "下午";
             const safeItem = JSON.stringify(item).replace(/"/g, '"');
             
-            // 3. 地圖連結回歸
             const keyword = item["Google map keyword"] || "";
             const mapHtml = keyword ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(keyword)}" class="map-link" target="_blank">📍 地圖導覽</a>` : "";
 
@@ -206,8 +212,8 @@
                     </div>
                 </div>
                 <div class="card-actions">
-                    <span onclick='openModal("edit", ${safeItem})'>✏️</span>
-                    <span onclick="handleDelete('${item.時間}','${item.標題}')">🗑️</span>
+                    <span style="cursor:pointer">✏️</span>
+                    <span style="cursor:pointer">🗑️</span>
                 </div>
                 <div class="unlock-bar-bg"><div class="unlock-bar-fill"></div></div>
             `;
@@ -238,11 +244,11 @@
                     if(newTop < 0) newTop = 0;
                     target.style.top = newTop + "px";
 
-                    // 4. 即時時間氣泡邏輯
                     const snappedTop = Math.round(newTop / SLOT_PX) * SLOT_PX;
                     const totalMins = (snappedTop / SLOT_PX) * 15;
                     const hh = Math.floor(totalMins / 60);
                     const mm = totalMins % 60;
+                    // 即時更新 Pop 提示
                     target.querySelector('.drag-tooltip').innerText = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
                 },
                 async end(event) {
