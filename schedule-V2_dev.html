@@ -13,6 +13,7 @@
         }
         body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; overflow-x: hidden; }
         
+        /* 壓縮頂部區域間距 */
         .top-container {
             background: var(--primary);
             padding-bottom: 12px; 
@@ -26,51 +27,90 @@
         }
 
         .header-title-group { display: flex; align-items: center; gap: 12px; }
-        .main-title { font-size: 24px; font-weight: 800; letter-spacing: 0.5px; color: white; }
+        
+        /* 1. 標題與大雪花圖示 */
+        .main-title { font-size: 24px; font-weight: 900; letter-spacing: 0.5px; color: white; }
         .version-tag { font-size: 8px; background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); padding: 1px 5px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); }
 
-        /* 修正：D1 標籤排版 (取消粗體) */
-        .date-selector { display: flex; overflow-x: auto; padding: 5px 20px 10px; gap: 10px; scrollbar-width: none; }
+        /* 2. 方形粗體 Day 按鈕 */
+        .date-selector { display: flex; overflow-x: auto; padding: 10px 20px; gap: 10px; scrollbar-width: none; }
         .date-box { 
-            min-width: 60px; padding: 10px 6px; 
+            min-width: 65px; padding: 12px 6px; 
             background: rgba(255,255,255,0.12); 
-            border-radius: 10px; 
+            border-radius: 18px; /* 方形圓角 */
             text-align: center; 
-            color: rgba(255,255,255,0.6); flex-shrink: 0; transition: 0.25s ease;
+            color: rgba(255,255,255,0.8); flex-shrink: 0; transition: 0.25s ease;
             border: 1px solid rgba(255,255,255,0.05);
         }
-        .date-box .day-num { 
-            font-size: 10px; display: block; margin-bottom: 4px; 
-            font-weight: normal; opacity: 0.9;
-        }
-        .date-box .day-id { 
-            font-size: 16px; 
-            font-weight: normal; /* 取消 Day1/D1 的粗體 */
-            letter-spacing: 0.5px;
-        }
+        .date-box .day-num { font-size: 11px; display: block; margin-bottom: 2px; font-weight: bold; }
+        .date-box .day-id { font-size: 18px; font-weight: 900; }
         
         .date-box.active { 
             background: white; color: var(--primary); 
             box-shadow: 0 6px 15px rgba(0,0,0,0.15); 
-            transform: translateY(-1px);
+            transform: translateY(-2px);
         }
 
+        /* 3. 時間軸點與線 */
         .timeline-container { display: flex; padding: 15px 15px; position: relative; }
-        .drop-zone { flex-grow: 1; position: relative; }
+        
+        /* 導航連線 */
+        .timeline-line {
+            position: absolute; left: 30px; top: 30px; bottom: 30px;
+            width: 2px; background: #e0e0e0; z-index: 1;
+        }
+
+        .drop-zone { flex-grow: 1; position: relative; z-index: 2; padding-left: 35px; }
+
         .event-card {
             background: white; border-radius: 20px; padding: 18px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.04); 
             display: flex; gap: 15px; align-items: center;
-            position: relative; margin-bottom: 12px;
+            position: relative; margin-bottom: 12px; transition: 0.3s;
         }
+
+        /* 左側圓點 */
+        .event-card::before {
+            content: ""; position: absolute; left: -32px; top: 50%;
+            width: 10px; height: 10px; background: var(--primary);
+            border-radius: 50%; border: 3px solid #fff;
+            transform: translateY(-50%); box-shadow: 0 0 0 2px #e0e0e0;
+        }
+
         .card-time-block {
             background: #f8f9fb; border-radius: 12px;
             min-width: 65px; height: 65px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
+        .time-period { font-size: 10px; color: #999; font-weight: bold; }
         .time-hm { font-size: 18px; font-weight: 900; color: #333; }
+
+        .card-main { flex-grow: 1; }
         .card-title { font-size: 16px; font-weight: 800; color: #2d3436; margin: 0; }
         
+        .map-link { 
+            display: inline-flex; align-items: center; gap: 4px; 
+            margin-top: 10px; padding: 6px 12px; background: #f2f3ff; 
+            color: var(--primary); border-radius: 10px; font-size: 11px; 
+            text-decoration: none; font-weight: bold;
+        }
+
+        /* 調整模式下的樣式 */
+        body.edit-mode .timeline-line { display: none; }
+        body.edit-mode .event-card::before { display: none; }
+        body.edit-mode .drop-zone { padding-left: 0; }
+        body.edit-mode .card-detail, body.edit-mode .card-actions, body.edit-mode .map-link { display: none !important; }
+        body.edit-mode .event-card { padding: 10px 15px; }
+
+        /* 拖拽提示 */
+        .drag-tooltip {
+            position: absolute; top: -35px; left: 50%; transform: translateX(-50%);
+            background: var(--danger); color: white; padding: 4px 10px;
+            border-radius: 8px; font-weight: bold; font-size: 13px; display: none; z-index: 5000;
+        }
+        .event-card.is-active .drag-tooltip { display: block; }
+        .event-card.is-active { transform: scale(1.04); border: 2px solid var(--danger); z-index: 3000; }
+
         .add-fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; border: none; box-shadow: 0 8px 30px rgba(92, 78, 229, 0.4); }
         #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 12px 25px; border-radius: 30px; font-size: 13px; display: none; z-index: 5000; }
     </style>
@@ -81,31 +121,32 @@
     <header>
         <div class="header-title-group">
             <div onclick="location.href='index.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round">
-                <line x1="12" y1="3" x2="12" y2="21" />
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="5.64" y1="5.64" x2="18.36" y2="18.36" />
-                <line x1="18.36" y1="5.64" x2="5.64" y2="18.36" />
+            
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="white">
+                <path d="M22,11H19.17l2.42-2.41a1,1,0,1,0-1.42-1.42L17.58,10H13V5.42l2.59-2.59a1,1,0,0,0-1.42-1.42L12,3.83,9.83,1.41A1,1,0,1,0,8.41,2.83L11,5.42V10H6.42L3.83,7.17A1,1,0,1,0,2.41,8.59L4.83,11H2a1,1,0,0,0,0,2H4.83l-2.42,2.41a1,1,0,1,0,1.42,1.42L6.42,14H11v4.58L8.41,21.17a1,1,0,1,0,1.42,1.42L12,20.17l2.17,2.42a1,1,0,0,0,1.42-1.42L13,18.58V14h4.58l2.59,2.59a1,1,0,0,0,1.42-1.42L19.17,13H22a1,1,0,0,0,0-2Z"/>
             </svg>
             <span class="main-title">輕井澤。東京</span>
-            <span class="version-tag">Ver. 0121-1220</span>
+            <span class="version-tag">Ver. 0123-1430</span>
         </div>
-        <button id="toggleBtn" style="padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: white;">調整位置</button>
+        <button id="toggleBtn" style="padding: 6px 12px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: white;" onclick="toggleEditMode()">調整位置</button>
     </header>
 
     <div class="date-selector" id="dateSelector"></div>
 </div>
 
 <div class="timeline-container">
+    <div class="timeline-line"></div>
     <div class="drop-zone" id="dropZone"></div>
 </div>
 
-<button class="add-fab">＋</button>
+<button class="add-fab" onclick="alert('新增功能點擊')">＋</button>
 <div id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbz7lrfOtPmZH7fqUwbiRk3KgHAwZATgi51VSt2YqFamEinhdaxRvzqpMSrtUq7PsAK0bQ/exec";
-    let allData = [], currentDay = "2026/03/01";
+    const SLOT_PX = 32; 
+    let allData = [], currentDay = "2026/03/01", isEditMode = false;
 
     function getYoBi(dateString) {
         const days = ['日', '月', '火', '水', '木', '金', '土'];
@@ -113,7 +154,22 @@
         return days[d.getDay()];
     }
 
-    // 更新日期標籤顯示格式
+    function toggleEditMode() {
+        isEditMode = !isEditMode;
+        const btn = document.getElementById('toggleBtn');
+        btn.innerText = isEditMode ? "完成" : "調整位置";
+        btn.style.background = isEditMode ? "#ff7675" : "rgba(255,255,255,0.15)";
+        document.body.classList.toggle('edit-mode');
+        renderTimeline();
+    }
+
+    async function loadData() {
+        const r = await fetch(GAS_URL + "?type=schedule");
+        allData = await r.json();
+        renderDates();
+        renderTimeline();
+    }
+
     function renderDates() {
         const dates = ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04", "2026/03/05", "2026/03/06"];
         document.getElementById('dateSelector').innerHTML = dates.map((d, i) => `
@@ -126,13 +182,6 @@
 
     function setDay(d) { currentDay = d; renderDates(); renderTimeline(); }
 
-    async function loadData() {
-        const r = await fetch(GAS_URL + "?type=schedule");
-        allData = await r.json();
-        renderDates();
-        renderTimeline();
-    }
-
     function renderTimeline() {
         const zone = document.getElementById('dropZone');
         zone.innerHTML = '';
@@ -141,17 +190,44 @@
         dayData.forEach((item) => {
             const card = document.createElement('div');
             card.className = 'event-card';
+            const [h, m] = item.時間.split(':').map(Number);
+            card.dataset.originTop = ((h * 60 + m) / 15) * SLOT_PX;
+            
+            const keyword = item["Google map keyword"] || "";
+            const mapHtml = keyword ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(keyword)}" class="map-link" target="_blank">📍 地圖導覽</a>` : "";
+
             card.innerHTML = `
+                <div class="drag-tooltip"></div>
                 <div class="card-time-block">
-                    <span style="font-size:10px; color:#999; font-weight:bold;">${item.時間.split(':')[0] < 12 ? '午前' : '午後'}</span>
+                    <span class="time-period">${h < 12 ? '午前' : '午後'}</span>
                     <span class="time-hm">${item.時間}</span>
                 </div>
                 <div class="card-main">
                     <h4 class="card-title">${item.標題}</h4>
-                    <div style="font-size:13px; color:#777; margin-top:4px;">${item.內容 || ''}</div>
+                    <div class="card-detail">
+                        <div style="font-size:13px; color:#777; margin-top:8px;">${item.內容 || ''}</div>
+                        ${mapHtml}
+                    </div>
                 </div>
             `;
             zone.appendChild(card);
+            if(isEditMode) setupDrag(card, item);
+        });
+    }
+
+    function setupDrag(el, item) {
+        interact(el).draggable({
+            hold: 2000, 
+            listeners: {
+                move(event) {
+                    const target = event.target;
+                    const zoneRect = document.getElementById('dropZone').getBoundingClientRect();
+                    let newTop = event.clientY - zoneRect.top;
+                    target.style.top = newTop + "px";
+                    const totalMins = (Math.round(newTop / SLOT_PX) * SLOT_PX / SLOT_PX) * 15;
+                    target.querySelector('.drag-tooltip').innerText = `${String(Math.floor(totalMins/60)).padStart(2,'0')}:${String(totalMins%60).padStart(2,'0')}`;
+                }
+            }
         });
     }
 
