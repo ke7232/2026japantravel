@@ -3,86 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>輕井澤。東京 (V2 PRO)</title>
+    <title>輕井澤。東京</title>
     <style>
-        :root { 
-            --primary: #5c4ee5; 
-            --bg: #f5f6fa;
-            --slot-h: 32px;
-            --danger: #ff7675;
-        }
-        body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; overflow-x: hidden; }
+        :root { --primary: #5c4ee5; --bg: #f5f6fa; --danger: #ff7675; }
+        body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; overflow-x: hidden; scroll-behavior: smooth; }
         
-        .top-container {
-            background: var(--primary);
-            padding-bottom: 12px; 
-            position: sticky; top: 0; z-index: 2000;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-
+        .top-container { background: var(--primary); padding-bottom: 12px; position: sticky; top: 0; z-index: 2000; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         header { padding: 20px 20px 8px; display: flex; align-items: center; justify-content: space-between; color: white; }
         .header-title-group { display: flex; align-items: center; gap: 12px; }
         .main-title { font-size: 24px; font-weight: 900; letter-spacing: 0.5px; color: white; }
-        .version-tag { font-size: 8px; background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); padding: 1px 5px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); }
-
+        
+        /* 3. 按鈕美化：03/01 D1 格式 */
         .date-selector { display: flex; overflow-x: auto; padding: 10px 20px; gap: 10px; scrollbar-width: none; }
         .date-box { 
-            min-width: 65px; padding: 12px 6px; 
-            background: rgba(255,255,255,0.12); border-radius: 18px; text-align: center; 
-            color: rgba(255,255,255,0.8); flex-shrink: 0; transition: 0.25s ease;
+            min-width: 75px; padding: 10px 4px; background: rgba(255,255,255,0.12); 
+            border-radius: 15px; text-align: center; color: rgba(255,255,255,0.8); flex-shrink: 0; 
         }
         .date-box .day-num { font-size: 11px; display: block; margin-bottom: 2px; font-weight: bold; }
-        .date-box .day-id { font-size: 18px; font-weight: 900; }
-        .date-box.active { background: white; color: var(--primary); box-shadow: 0 6px 15px rgba(0,0,0,0.15); transform: translateY(-2px); }
+        .date-box .day-id { font-size: 19px; font-weight: 900; }
+        .date-box.active { background: white; color: var(--primary); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
 
-        .timeline-container { display: flex; padding: 15px 15px; position: relative; }
-        .timeline-line { position: absolute; left: 30px; top: 30px; bottom: 30px; width: 2px; background: #e0e0e0; z-index: 1; }
+        /* 4. 天氣看板設計 */
+        .dashboard { padding: 20px; background: white; margin: 15px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .weather-row { display: flex; justify-content: space-between; align-items: flex-end; }
+        .loc-tag { font-size: 12px; background: #f2f3ff; color: var(--primary); padding: 4px 10px; border-radius: 8px; font-weight: 800; }
+        .temp-main { font-size: 38px; font-weight: 900; color: #2d3436; line-height: 1; margin: 8px 0; }
+        .weather-desc { font-size: 14px; color: #636e72; font-weight: bold; }
+        .memo-box { margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 13px; color: #7f8c8d; line-height: 1.6; }
+
+        /* 行程軸樣式 */
+        .timeline-container { display: flex; padding: 0 15px 15px; position: relative; }
+        .timeline-line { position: absolute; left: 30px; top: 0; bottom: 30px; width: 2px; background: #e0e0e0; z-index: 1; }
         .drop-zone { flex-grow: 1; position: relative; z-index: 2; padding-left: 35px; }
 
         .event-card {
             background: white; border-radius: 20px; padding: 18px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.04); display: flex; gap: 15px; align-items: center;
-            position: relative; margin-bottom: 12px; transition: 0.3s;
+            position: relative; margin-bottom: 12px;
         }
-
-        /* 預設圓點 */
         .event-card::before {
             content: ""; position: absolute; left: -32px; top: 50%;
             width: 10px; height: 10px; background: var(--primary);
             border-radius: 50%; border: 3px solid #fff;
             transform: translateY(-50%); box-shadow: 0 0 0 2px #e0e0e0;
-            transition: 0.5s;
         }
 
-        /* 當前進度發光呼吸燈效果 */
+        /* 發光效果 */
         .event-card.is-current::before {
             background: #fff; border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(92, 78, 229, 0.2), 0 0 15px var(--primary);
+            box-shadow: 0 0 0 4px rgba(92, 78, 229, 0.2), 0 0 20px var(--primary);
             animation: pulseGlow 1.5s infinite;
         }
         @keyframes pulseGlow {
-            0% { transform: translateY(-50%) scale(1); opacity: 1; }
-            50% { transform: translateY(-50%) scale(1.3); opacity: 0.7; }
-            100% { transform: translateY(-50%) scale(1); opacity: 1; }
+            0% { transform: translateY(-50%) scale(1); }
+            50% { transform: translateY(-50%) scale(1.3); }
+            100% { transform: translateY(-50%) scale(1); }
         }
 
         .card-time-block { background: #f8f9fb; border-radius: 12px; min-width: 65px; height: 65px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .time-period { font-size: 10px; color: #999; font-weight: bold; }
         .time-hm { font-size: 18px; font-weight: 900; color: #333; }
         .card-title { font-size: 16px; font-weight: 800; color: #2d3436; margin: 0; }
-        .map-link { display: inline-flex; align-items: center; gap: 4px; margin-top: 10px; padding: 6px 12px; background: #f2f3ff; color: var(--primary); border-radius: 10px; font-size: 11px; text-decoration: none; font-weight: bold; }
-
+        
         body.edit-mode .timeline-line, body.edit-mode .event-card::before { display: none; }
-        body.edit-mode .drop-zone { padding-left: 0; }
-        body.edit-mode .card-detail, body.edit-mode .card-actions, body.edit-mode .map-link { display: none !important; }
-        body.edit-mode .event-card { padding: 10px 15px; }
-
-        .drag-tooltip { position: absolute; top: -35px; left: 50%; transform: translateX(-50%); background: var(--danger); color: white; padding: 4px 10px; border-radius: 8px; font-weight: bold; font-size: 13px; display: none; z-index: 5000; }
-        .event-card.is-active .drag-tooltip { display: block; }
-        .event-card.is-active { transform: scale(1.04); border: 2px solid var(--danger); z-index: 3000; }
-
-        .add-fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; border: none; box-shadow: 0 8px 30px rgba(92, 78, 229, 0.4); }
-        #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 12px 25px; border-radius: 30px; font-size: 13px; display: none; z-index: 5000; }
     </style>
 </head>
 <body>
@@ -90,46 +72,50 @@
 <div class="top-container">
     <header>
         <div class="header-title-group">
-            <div onclick="location.href='index.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
-            <svg viewBox="0 0 24 24" width="28" height="28" fill="white">
-                <path d="M22,11H19.17l2.42-2.41a1,1,0,1,0-1.42-1.42L17.58,10H13V5.42l2.59-2.59a1,1,0,0,0-1.42-1.42L12,3.83,9.83,1.41A1,1,0,1,0,8.41,2.83L11,5.42V10H6.42L3.83,7.17A1,1,0,1,0,2.41,8.59L4.83,11H2a1,1,0,0,0,0,2H4.83l-2.42,2.41a1,1,0,1,0,1.42,1.42L6.42,14H11v4.58L8.41,21.17a1,1,0,1,0,1.42,1.42L12,20.17l2.17,2.42a1,1,0,0,0,1.42-1.42L13,18.58V14h4.58l2.59,2.59a1,1,0,0,0,1.42-1.42L19.17,13H22a1,1,0,0,0,0-2Z"/>
-            </svg>
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="white"><path d="M22,11H19.17l2.42-2.41a1,1,0,1,0-1.42-1.42L17.58,10H13V5.42l2.59-2.59a1,1,0,0,0-1.42-1.42L12,3.83,9.83,1.41A1,1,0,1,0,8.41,2.83L11,5.42V10H6.42L3.83,7.17A1,1,0,1,0,2.41,8.59L4.83,11H2a1,1,0,0,0,0,2H4.83l-2.42,2.41a1,1,0,1,0,1.42,1.42L6.42,14H11v4.58L8.41,21.17a1,1,0,1,0,1.42,1.42L12,20.17l2.17,2.42a1,1,0,0,0,1.42-1.42L13,18.58V14h4.58l2.59,2.59a1,1,0,0,0,1.42-1.42L19.17,13H22a1,1,0,0,0,0-2Z"/></svg>
             <span class="main-title">輕井澤。東京</span>
-            <span class="version-tag">Ver. 0123-1450</span>
         </div>
-        <button id="toggleBtn" style="padding: 6px 12px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: white;" onclick="toggleEditMode()">調整位置</button>
+        <button id="toggleBtn" onclick="toggleEditMode()" style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:white; padding:6px 12px; border-radius:12px; font-size:11px; font-weight:bold;">調整位置</button>
     </header>
-
     <div class="date-selector" id="dateSelector"></div>
 </div>
+
+<div id="dashboardArea"></div>
 
 <div class="timeline-container">
     <div class="timeline-line"></div>
     <div class="drop-zone" id="dropZone"></div>
 </div>
 
-<button class="add-fab">＋</button>
-<div id="toast"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbz7lrfOtPmZH7fqUwbiRk3KgHAwZATgi51VSt2YqFamEinhdaxRvzqpMSrtUq7PsAK0bQ/exec";
-    const SLOT_PX = 32; 
-    let allData = [], currentDay = "2026/03/01", isEditMode = false;
+    let allData = [], currentDay = "2026/03/01";
 
-    function getYoBi(dateString) {
-        const days = ['日', '月', '火', '水', '木', '金', '土'];
-        const d = new Date(dateString);
-        return days[d.getDay()];
-    }
+    // 4. 天氣資料預設
+    const weatherData = {
+        "D1": { loc: "輕井澤", temp: "-2° / 6°", desc: "❄️ 晴時多雲，注意保暖", memo: "抵達輕井澤，開啟雪國之旅。記得先去飯店寄放行李。" },
+        "D2": { loc: "輕井澤", temp: "-4° / 4°", desc: "☀️ 晴朗，體感溫度極低", memo: "石之教堂與高原教會行程，建議穿著發熱衣。" },
+        "D3": { loc: "輕井澤", temp: "-1° / 7°", desc: "☁️ 多雲轉晴", memo: "王子購物廣場（Outlet）血拼日，準備好足夠的體力。" },
+        "D4": { isDouble: true, loc1: "輕井澤", temp1: "0°/6°", loc2: "東京", temp2: "8°/14°", desc: "🚄 城市移防", memo: "中午搭乘新幹線前往東京，溫差較大注意穿脫衣物。" },
+        "D5": { loc: "東京", temp: "7° / 15°", desc: "☀️ 晴朗舒適", memo: "淺草雷門與晴空塔，感受東京下町文化與現代地標。" },
+        "D6": { loc: "東京", temp: "9° / 16°", desc: "🌧️ 局部陣雨", memo: "最後採買，準備前往機場。記得檢查護照與機票。" }
+    };
 
-    function toggleEditMode() {
-        isEditMode = !isEditMode;
-        const btn = document.getElementById('toggleBtn');
-        btn.innerText = isEditMode ? "完成" : "調整位置";
-        btn.style.background = isEditMode ? "#ff7675" : "rgba(255,255,255,0.15)";
-        document.body.classList.toggle('edit-mode');
-        renderTimeline();
+    function renderDashboard(dayId) {
+        const d = weatherData[dayId];
+        let html = '';
+        if(d.isDouble) {
+            html = `<div class="dashboard"><div class="weather-row">
+                <div><span class="loc-tag">${d.loc1}</span><div class="temp-main">${d.temp1}</div></div>
+                <div style="text-align:right;"><span class="loc-tag">${d.loc2}</span><div class="temp-main">${d.temp2}</div></div>
+            </div><div class="weather-desc">🚄 ${d.desc}</div><div class="memo-box">${d.memo}</div></div>`;
+        } else {
+            html = `<div class="dashboard"><div class="weather-row">
+                <div><span class="loc-tag">${d.loc}</span><div class="temp-main">${d.temp}</div><div class="weather-desc">${d.desc}</div></div>
+                <div style="font-size:40px;">${d.desc.includes('☀️')?'☀️':'☁️'}</div>
+            </div><div class="memo-box">${d.memo}</div></div>`;
+        }
+        document.getElementById('dashboardArea').innerHTML = html;
     }
 
     async function loadData() {
@@ -142,21 +128,21 @@
     function renderDates() {
         const dates = ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04", "2026/03/05", "2026/03/06"];
         document.getElementById('dateSelector').innerHTML = dates.map((d, i) => `
-            <div class="date-box ${currentDay === d ? 'active' : ''}" onclick="setDay('${d}')">
-                <span class="day-num">${d.split('/')[1]}/${d.split('/')[2]} ${getYoBi(d)}</span>
+            <div class="date-box ${currentDay === d ? 'active' : ''}" onclick="setDay('${d}', 'D${i+1}')">
+                <span class="day-num">${d.split('/')[1]}/${d.split('/')[2]}</span>
                 <span class="day-id">D${i+1}</span>
             </div>
         `).join('');
+        renderDashboard(`D${dates.indexOf(currentDay)+1}`);
     }
 
-    function setDay(d) { currentDay = d; renderDates(); renderTimeline(); }
+    function setDay(d, id) { currentDay = d; renderDates(); renderTimeline(); }
 
     function renderTimeline() {
         const zone = document.getElementById('dropZone');
         zone.innerHTML = '';
         const dayData = allData.filter(item => (item.日期 || "").replace(/-/g, '/') === currentDay).sort((a,b) => a.時間.localeCompare(b.時間));
-
-        // 偵測進度
+        
         const now = new Date();
         const currentMins = now.getHours() * 60 + now.getMinutes();
         let closestIndex = -1, minDiff = Infinity;
@@ -164,51 +150,28 @@
         dayData.forEach((item, index) => {
             const [h, m] = item.時間.split(':').map(Number);
             const itemMins = h * 60 + m;
-            
-            // 找出距離現在時間最近且尚未過期的行程
             const diff = currentMins - itemMins;
             if (diff >= 0 && diff < minDiff) { minDiff = diff; closestIndex = index; }
 
             const card = document.createElement('div');
-            card.className = `event-card ${index === closestIndex ? 'is-current' : ''}`; // 標記發光
-            card.dataset.originTop = (itemMins / 15) * SLOT_PX;
-            
-            const keyword = item["Google map keyword"] || "";
-            const mapHtml = keyword ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(keyword)}" class="map-link" target="_blank">📍 地圖導覽</a>` : "";
+            card.className = `event-card ${index === closestIndex ? 'is-current' : ''}`;
+            if(index === closestIndex) card.id = 'active-task'; // 標記捲動目標
 
             card.innerHTML = `
-                <div class="drag-tooltip"></div>
-                <div class="card-time-block">
-                    <span class="time-period">${h < 12 ? '午前' : '午後'}</span>
-                    <span class="time-hm">${item.時間}</span>
-                </div>
-                <div class="card-main">
-                    <h4 class="card-title">${item.標題}</h4>
-                    <div class="card-detail">
-                        <div style="font-size:13px; color:#777; margin-top:8px;">${item.內容 || ''}</div>
-                        ${mapHtml}
-                    </div>
-                </div>
-            `;
+                <div class="card-time-block"><span class="time-hm">${item.時間}</span></div>
+                <div class="card-main"><h4 class="card-title">${item.標題}</h4>
+                <div style="font-size:13px; color:#777; margin-top:5px;">${item.內容 || ''}</div></div>`;
             zone.appendChild(card);
-            if(isEditMode) setupDrag(card, item);
         });
-    }
 
-    function setupDrag(el, item) {
-        interact(el).draggable({
-            hold: 2000, 
-            listeners: {
-                move(event) {
-                    const target = event.target;
-                    const zoneRect = document.getElementById('dropZone').getBoundingClientRect();
-                    let newTop = event.clientY - zoneRect.top;
-                    target.style.top = newTop + "px";
-                    const totalMins = (Math.round(newTop / SLOT_PX) * SLOT_PX / SLOT_PX) * 15;
-                    target.querySelector('.drag-tooltip').innerText = `${String(Math.floor(totalMins/60)).padStart(2,'0')}:${String(totalMins%60).padStart(2,'0')}`;
-                }
+        // 1. 自動捲動功能
+        setTimeout(() => {
+            const activeEl = document.getElementById('active-task');
+            if(activeEl) {
+                const offset = activeEl.getBoundingClientRect().top + window.pageYOffset - 250;
+                window.scrollTo({ top: offset, behavior: 'smooth' });
             }
-        });
+        }, 500);
     }
 
     window.onload = loadData;
