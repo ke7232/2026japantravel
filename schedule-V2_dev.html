@@ -13,7 +13,6 @@
         }
         body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; overflow-x: hidden; }
         
-        /* 壓縮頂部區域間距並移除大圓角 */
         .top-container {
             background: var(--primary);
             padding-bottom: 12px; 
@@ -22,98 +21,61 @@
         }
 
         header { 
-            padding: 20px 20px 10px; 
+            padding: 20px 20px 8px; 
             display: flex; align-items: center; justify-content: space-between; color: white;
-            position: relative;
         }
 
-        /* 標題與雪花排版：字體放大 */
-        .header-title-group { display: flex; align-items: center; gap: 10px; }
-        .main-title { font-size: 24px; font-weight: 800; letter-spacing: 1px; color: white; }
-        
-        /* 獨立版本標籤 */
-        .version-tag { font-size: 8px; background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); padding: 1px 6px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); }
+        .header-title-group { display: flex; align-items: center; gap: 12px; }
+        .main-title { font-size: 24px; font-weight: 800; letter-spacing: 0.5px; color: white; }
+        .version-tag { font-size: 8px; background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); padding: 1px 5px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); }
 
-        /* Day 按鈕全新設計 */
-        .date-selector { display: flex; overflow-x: auto; padding: 5px 20px 10px; gap: 12px; scrollbar-width: none; }
+        /* 修正：D1 標籤排版 (取消粗體) */
+        .date-selector { display: flex; overflow-x: auto; padding: 5px 20px 10px; gap: 10px; scrollbar-width: none; }
         .date-box { 
-            min-width: 60px; padding: 12px 10px; 
+            min-width: 60px; padding: 10px 6px; 
             background: rgba(255,255,255,0.12); 
-            border-radius: 24px; text-align: center; 
-            color: rgba(255,255,255,0.6); flex-shrink: 0; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 10px; 
+            text-align: center; 
+            color: rgba(255,255,255,0.6); flex-shrink: 0; transition: 0.25s ease;
             border: 1px solid rgba(255,255,255,0.05);
         }
-        .date-box .day-num { font-size: 10px; display: block; margin-bottom: 3px; font-weight: 500; }
-        .date-box .day-id { font-size: 15px; font-weight: 800; }
+        .date-box .day-num { 
+            font-size: 10px; display: block; margin-bottom: 4px; 
+            font-weight: normal; opacity: 0.9;
+        }
+        .date-box .day-id { 
+            font-size: 16px; 
+            font-weight: normal; /* 取消 Day1/D1 的粗體 */
+            letter-spacing: 0.5px;
+        }
         
-        /* 選中時的樣式 */
         .date-box.active { 
             background: white; color: var(--primary); 
-            box-shadow: 0 8px 16px rgba(0,0,0,0.2); 
-            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15); 
+            transform: translateY(-1px);
         }
 
         .timeline-container { display: flex; padding: 15px 15px; position: relative; }
-        .hour-axis { width: 0; flex-shrink: 0; overflow: hidden; }
-        body.edit-mode .hour-axis { width: 45px; border-right: 1px solid #ddd; margin-right: 10px; }
-        .axis-label { height: calc(var(--slot-h) * 4); display: flex; align-items: flex-start; justify-content: center; font-size: 12px; color: #888; font-weight: 800; padding-top: 5px; border-bottom: 1px dashed #eee; box-sizing: border-box; }
-
         .drop-zone { flex-grow: 1; position: relative; }
-        body.edit-mode .drop-zone { background-image: linear-gradient(#e0e0e0 1px, transparent 1px); background-size: 100% var(--slot-h); min-height: 2200px; }
-
         .event-card {
-            background: white; border-radius: 24px; padding: 18px;
+            background: white; border-radius: 20px; padding: 18px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.04); 
             display: flex; gap: 15px; align-items: center;
-            position: relative; margin-bottom: 12px; transition: 0.3s;
+            position: relative; margin-bottom: 12px;
         }
-
         .card-time-block {
-            background: #f8f9fb; border-radius: 16px;
-            min-width: 70px; height: 70px;
+            background: #f8f9fb; border-radius: 12px;
+            min-width: 65px; height: 65px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: #333; flex-shrink: 0;
         }
-        .time-period { font-size: 10px; color: #888; font-weight: bold; }
-        .time-hm { font-size: 18px; font-weight: 900; }
-
-        .card-main { flex-grow: 1; }
-        .card-title { font-size: 16px; font-weight: 800; color: #2d3436; margin: 0 0 4px; }
-
-        body.edit-mode .card-detail, body.edit-mode .card-actions, body.edit-mode .map-link { display: none !important; }
-        body.edit-mode .event-card { padding: 10px 15px; }
-        body.edit-mode .card-time-block { height: 45px; min-width: 55px; }
-
-        .drag-tooltip {
-            position: absolute; top: -35px; left: 50%; transform: translateX(-50%);
-            background: var(--danger); color: white; padding: 4px 10px;
-            border-radius: 8px; font-weight: bold; font-size: 13px; display: none; z-index: 5000;
-        }
-        .event-card.is-active .drag-tooltip { display: block; }
-
-        .unlock-bar-bg { position: absolute; bottom: 0; left: 0; width: 100%; height: 5px; background: #eee; border-radius: 0 0 24px 24px; display: none; overflow: hidden; }
-        .unlock-bar-fill { width: 0%; height: 100%; background: var(--danger); }
-        .is-holding .unlock-bar-bg { display: block; }
-        .is-holding .unlock-bar-fill { animation: fillProgress 2s linear forwards; }
-        @keyframes fillProgress { from { width: 0%; } to { width: 100%; } }
-
-        .event-card.is-active { transform: scale(1.04); border: 2px solid var(--danger); z-index: 3000; }
-        .card-actions { position: absolute; top: 15px; right: 15px; display: flex; gap: 10px; opacity: 0.1; }
-        .event-card:hover .card-actions { opacity: 1; }
+        .time-hm { font-size: 18px; font-weight: 900; color: #333; }
+        .card-title { font-size: 16px; font-weight: 800; color: #2d3436; margin: 0; }
         
-        .map-link { 
-            display: inline-flex; align-items: center; gap: 4px; 
-            margin-top: 10px; padding: 6px 12px; background: #f2f3ff; 
-            color: var(--primary); border-radius: 10px; font-size: 11px; 
-            text-decoration: none; font-weight: bold;
-        }
-
-        .add-fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; border: none; box-shadow: 0 8px 30px rgba(92, 78, 229, 0.4); z-index: 2500; }
-        body.edit-mode .add-fab { display: none; }
+        .add-fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; border: none; box-shadow: 0 8px 30px rgba(92, 78, 229, 0.4); }
         #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 12px 25px; border-radius: 30px; font-size: 13px; display: none; z-index: 5000; }
     </style>
 </head>
-<body onkeydown="if(event.key==='Escape') location.reload()">
+<body>
 
 <div class="top-container">
     <header>
@@ -126,155 +88,73 @@
                 <line x1="18.36" y1="5.64" x2="5.64" y2="18.36" />
             </svg>
             <span class="main-title">輕井澤。東京</span>
-            <span class="version-tag">Ver. 0123-1200</span>
+            <span class="version-tag">Ver. 0121-1220</span>
         </div>
-        <button id="toggleBtn" style="padding: 6px 12px; border-radius: 12px; font-size: 11px; font-weight: bold; border: 1px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.15); color: white;" onclick="toggleEditMode()">調整位置</button>
+        <button id="toggleBtn" style="padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: white;">調整位置</button>
     </header>
 
     <div class="date-selector" id="dateSelector"></div>
 </div>
 
 <div class="timeline-container">
-    <div class="hour-axis" id="hourAxis"></div>
     <div class="drop-zone" id="dropZone"></div>
 </div>
 
-<button class="add-fab" onclick="">＋</button>
-
+<button class="add-fab">＋</button>
 <div id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbz7lrfOtPmZH7fqUwbiRk3KgHAwZATgi51VSt2YqFamEinhdaxRvzqpMSrtUq7PsAK0bQ/exec";
-    const SLOT_PX = 32; 
-    let allData = [], currentDay = "2026/03/01", isEditMode = false;
+    let allData = [], currentDay = "2026/03/01";
 
-    function toggleEditMode() {
-        isEditMode = !isEditMode;
-        const btn = document.getElementById('toggleBtn');
-        if(isEditMode) { 
-            btn.innerText = "完成"; btn.style.background = "#ff7675";
-            document.body.classList.add('edit-mode');
-        } else { 
-            btn.innerText = "調整位置"; btn.style.background = "rgba(255,255,255,0.15)";
-            document.body.classList.remove('edit-mode');
-        }
-        renderTimeline();
+    function getYoBi(dateString) {
+        const days = ['日', '月', '火', '水', '木', '金', '土'];
+        const d = new Date(dateString);
+        return days[d.getDay()];
     }
+
+    // 更新日期標籤顯示格式
+    function renderDates() {
+        const dates = ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04", "2026/03/05", "2026/03/06"];
+        document.getElementById('dateSelector').innerHTML = dates.map((d, i) => `
+            <div class="date-box ${currentDay === d ? 'active' : ''}" onclick="setDay('${d}')">
+                <span class="day-num">${d.split('/')[1]}/${d.split('/')[2]} ${getYoBi(d)}</span>
+                <span class="day-id">D${i+1}</span>
+            </div>
+        `).join('');
+    }
+
+    function setDay(d) { currentDay = d; renderDates(); renderTimeline(); }
 
     async function loadData() {
         const r = await fetch(GAS_URL + "?type=schedule");
         allData = await r.json();
         renderDates();
-        renderTimeline(true);
+        renderTimeline();
     }
 
-    function renderDates() {
-        const dates = ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04", "2026/03/05", "2026/03/06"];
-        document.getElementById('dateSelector').innerHTML = dates.map((d, i) => `
-            <div class="date-box ${currentDay === d ? 'active' : ''}" onclick="setDay('${d}')">
-                <span class="day-num">${d.split('/')[1]}/${d.split('/')[2]} 日</span>
-                <span class="day-id">Day${i+1}</span>
-            </div>
-        `).join('');
-    }
-
-    function setDay(d) { currentDay = d; renderDates(); renderTimeline(true); }
-
-    function renderTimeline(autoFocus = false) {
+    function renderTimeline() {
         const zone = document.getElementById('dropZone');
-        const axis = document.getElementById('hourAxis');
-        zone.innerHTML = ''; axis.innerHTML = '';
-        document.body.classList.remove('dragging');
-        interact('.event-card').unset();
-
+        zone.innerHTML = '';
         const dayData = allData.filter(item => (item.日期 || "").replace(/-/g, '/') === currentDay).sort((a,b) => a.時間.localeCompare(b.時間));
-
-        if(isEditMode) {
-            for(let i=0; i<24; i++) {
-                const lbl = document.createElement('div'); lbl.className = 'axis-label';
-                lbl.innerText = String(i).padStart(2,'0'); axis.appendChild(lbl);
-            }
-        }
 
         dayData.forEach((item) => {
             const card = document.createElement('div');
             card.className = 'event-card';
-            const [h, m] = item.時間.split(':').map(Number);
-            card.dataset.originTop = ((h * 60 + m) / 15) * SLOT_PX;
-            
-            const period = h < 12 ? "上午" : "下午";
-            const safeItem = JSON.stringify(item).replace(/"/g, '"');
-            const keyword = item["Google map keyword"] || "";
-            const mapHtml = keyword ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(keyword)}" class="map-link" target="_blank">📍 地圖導覽</a>` : "";
-
             card.innerHTML = `
-                <div class="drag-tooltip"></div>
                 <div class="card-time-block">
-                    <span class="time-period">${period}</span>
+                    <span style="font-size:10px; color:#999; font-weight:bold;">${item.時間.split(':')[0] < 12 ? '午前' : '午後'}</span>
                     <span class="time-hm">${item.時間}</span>
                 </div>
                 <div class="card-main">
                     <h4 class="card-title">${item.標題}</h4>
-                    <div class="card-detail">
-                        <div style="font-size:13px; color:#777; margin-bottom:8px;">${item.內容 || ''}</div>
-                        ${mapHtml}
-                    </div>
+                    <div style="font-size:13px; color:#777; margin-top:4px;">${item.內容 || ''}</div>
                 </div>
-                <div class="card-actions">
-                    <span style="font-size:16px;">✏️</span>
-                </div>
-                <div class="unlock-bar-bg"><div class="unlock-bar-fill"></div></div>
             `;
             zone.appendChild(card);
-            
-            if(isEditMode) {
-                card.style.position = 'absolute'; card.style.top = card.dataset.originTop + "px"; card.style.width = "calc(100% - 30px)";
-                setupDrag(card, item);
-                card.onpointerdown = () => card.classList.add('is-holding');
-                card.onpointerup = card.onpointerleave = () => card.classList.remove('is-holding');
-            }
         });
     }
 
-    function setupDrag(el, item) {
-        interact(el).draggable({
-            hold: 2000, 
-            listeners: {
-                start(event) {
-                    document.body.classList.add('dragging');
-                    event.target.classList.add('is-active');
-                    document.querySelectorAll('.event-card:not(.is-active)').forEach(c => c.style.opacity = "0.3");
-                },
-                move(event) {
-                    const target = event.target;
-                    const zoneRect = document.getElementById('dropZone').getBoundingClientRect();
-                    let newTop = event.clientY - zoneRect.top;
-                    if(newTop < 0) newTop = 0;
-                    target.style.top = newTop + "px";
-                    const snappedTop = Math.round(newTop / SLOT_PX) * SLOT_PX;
-                    const totalMins = (snappedTop / SLOT_PX) * 15;
-                    const hh = Math.floor(totalMins / 60);
-                    const mm = totalMins % 60;
-                    target.querySelector('.drag-tooltip').innerText = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
-                },
-                async end(event) {
-                    const target = event.target;
-                    const finalTop = parseFloat(target.style.top);
-                    const snappedTop = Math.round(finalTop / SLOT_PX) * SLOT_PX;
-                    const totalMins = (snappedTop / SLOT_PX) * 15;
-                    const newTime = `${String(Math.floor(totalMins / 60)).padStart(2,'0')}:${String(totalMins % 60).padStart(2,'0')}`;
-                    if (newTime !== item.時間 && totalMins < 1440) {
-                        showToast(`🚀 同步至 ${newTime}...`);
-                        await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ action: "edit", date: currentDay, oldTime: item.時間, oldTitle: item.標題, time: newTime, title: item.標題, content: item.內容 })});
-                        setTimeout(loadData, 1000);
-                    } else { renderTimeline(); }
-                }
-            }
-        });
-    }
-
-    function showToast(m) { const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
     window.onload = loadData;
 </script>
 </body>
