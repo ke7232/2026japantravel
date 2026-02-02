@@ -8,20 +8,27 @@
         :root { --primary: #5c4ee5; --bg: #f5f6fa; --danger: #ff7675; --slot-h: 32px; }
         body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; overflow-x: hidden; scroll-behavior: smooth; }
         
-        .top-container { background: var(--primary); padding-bottom: 12px; position: sticky; top: 0; z-index: 2000; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        header { padding: 20px 20px 8px; display: flex; align-items: center; justify-content: space-between; color: white; }
+        /* 1. 頂部區域緊湊化：移除多餘 block */
+        .top-container { background: var(--primary); padding-bottom: 15px; position: sticky; top: 0; z-index: 2000; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        header { padding: 15px 20px 5px; display: flex; align-items: center; justify-content: space-between; color: white; }
         .main-title { font-size: 24px; font-weight: 900; letter-spacing: 1px; }
         .version-tag { font-size: 8px; background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); padding: 2px 6px; border-radius: 20px; }
 
-        .date-selector { display: flex; overflow-x: auto; padding: 10px 20px; gap: 10px; scrollbar-width: none; }
-        .date-box { min-width: 75px; padding: 12px 4px; background: rgba(255,255,255,0.12); border-radius: 15px; text-align: center; color: rgba(255,255,255,0.8); flex-shrink: 0; transition: 0.3s; }
-        .date-box.active { background: white; color: var(--primary); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
+        /* 1. 按鈕重塑：方形標籤風格 */
+        .date-selector { display: flex; overflow-x: auto; padding: 10px 20px; gap: 8px; scrollbar-width: none; }
+        .date-box { 
+            min-width: 90px; padding: 10px 6px; background: rgba(255,255,255,0.12); 
+            border-radius: 10px; text-align: center; color: rgba(255,255,255,0.8); flex-shrink: 0; transition: 0.3s;
+        }
+        .date-box .day-num { font-size: 11px; display: block; margin-bottom: 2px; font-weight: bold; }
+        .date-box .day-id { font-size: 16px; font-weight: 900; }
+        .date-box.active { background: white; color: var(--primary); box-shadow: 0 6px 15px rgba(0,0,0,0.15); transform: translateY(-2px); }
 
         body.edit-mode #dashboardArea { display: none; }
         .dashboard { padding: 20px; background: white; margin: 15px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .temp-main { font-size: 32px; font-weight: 900; color: #2d3436; margin: 5px 0; }
 
-        .timeline-container { display: flex; padding: 0 15px 15px; position: relative; }
+        .timeline-container { display: flex; padding: 10px 15px; position: relative; }
         .hour-axis { width: 0; flex-shrink: 0; overflow: hidden; }
         body.edit-mode .hour-axis { width: 45px; border-right: 1px solid #ddd; margin-right: 10px; }
         .axis-label { height: calc(var(--slot-h) * 4); display: flex; align-items: flex-start; justify-content: center; font-size: 12px; color: #888; font-weight: 800; padding-top: 5px; border-bottom: 1px dashed #eee; box-sizing: border-box; }
@@ -41,19 +48,19 @@
         .card-main { flex-grow: 1; overflow: hidden; }
         .card-title { font-size: 16px; font-weight: 800; color: #2d3436; margin: 0; }
 
-        /* 2. 高質感 Google Maps 按鈕 */
+        /* 2. 多重地圖連結樣式優化 */
+        .map-links-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
         .map-link { 
-            display: inline-flex; align-items: center; gap: 8px; 
-            margin-top: 15px; padding: 8px 16px; 
-            background: #ffffff; color: #3c4043; border-radius: 12px; 
-            font-size: 12px; text-decoration: none; font-weight: 800;
-            border: 1px solid #dadce0; box-shadow: 0 1px 3px rgba(60,64,67,0.1);
-            transition: all 0.2s ease;
+            display: inline-flex; align-items: center; gap: 6px; 
+            padding: 8px 14px; background: #ffffff; color: #3c4043; 
+            border-radius: 12px; font-size: 11px; text-decoration: none; 
+            font-weight: 800; border: 1px solid #dadce0; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: 0.2s;
         }
-        .map-link:active { background: #f8f9fa; transform: scale(0.95); }
+        .map-link:active { transform: scale(0.95); background: #f8f9fa; }
 
         .event-card.is-current::before { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(92, 78, 229, 0.2), 0 0 20px var(--primary); animation: pulseGlow 1.5s infinite; }
-        @keyframes pulseGlow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes pulseGlow { 0%, 100% { transform: translateY(-50%) scale(1); } 50% { transform: translateY(-50%) scale(1.3); } }
 
         .card-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; opacity: 0; transition: 0.2s; }
         .event-card:hover .card-actions { opacity: 1; }
@@ -69,7 +76,7 @@
         @keyframes fillProgress { from { width: 0%; } to { width: 100%; } }
 
         .add-fab { position: fixed; bottom: 30px; right: 25px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; border: none; box-shadow: 0 8px 30px rgba(92, 78, 229, 0.4); z-index: 2500; }
-        body.edit-mode .add-fab, body.edit-mode .card-actions, body.edit-mode .map-link { display: none !important; }
+        body.edit-mode .add-fab, body.edit-mode .card-actions, body.edit-mode .map-links-container { display: none !important; }
         
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
         .modal { width: 88%; max-width: 360px; background: white; border-radius: 30px; padding: 25px; box-sizing: border-box; }
@@ -83,10 +90,10 @@
         <div class="header-title-group">
             <div onclick="location.href='index.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
             <b class="main-title">輕井澤。東京</b>
-            <span class="version-tag">Ver. 0123-2200</span>
+            <span class="version-tag">Ver. 0124-0100</span>
         </div>
         <div style="display:flex; gap:10px; align-items:center;">
-            <span id="cancelBtn" onclick="location.reload()" style="display:none; font-size:12px; cursor:pointer; opacity:0.8;">取消調整</span>
+            <span id="cancelBtn" onclick="location.reload()" style="display:none; font-size:12px; cursor:pointer; opacity:0.8; color:white;">取消調整</span>
             <button id="toggleBtn" onclick="toggleEditMode()" style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3); color:white; padding:6px 12px; border-radius:12px; font-size:11px; font-weight:bold;">調整位置</button>
         </div>
     </header>
@@ -112,7 +119,7 @@
         <select id="fMin" style="flex:1; padding:12px; border-radius:15px; border:1px solid #eee;"></select>
     </div>
     <textarea id="fContent" rows="4" style="width:100%; padding:14px; border:1px solid #eee; border-radius:15px; margin:8px 0; box-sizing:border-box;" placeholder="備註景點 (空格可自動分行)..."></textarea>
-    <input type="text" id="fKeyword" style="width:100%; padding:14px; border:1px solid #eee; border-radius:15px; margin:8px 0; box-sizing:border-box;" placeholder="地圖關鍵字">
+    <input type="text" id="fKeyword" style="width:100%; padding:14px; border:1px solid #eee; border-radius:15px; margin:8px 0; box-sizing:border-box;" placeholder="地圖關鍵字 (多個請用逗號隔開)">
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:15px;">
         <button onclick="closeModal()" style="padding:12px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;">取消</button>
         <button style="background:var(--primary); color:white; padding:12px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;" onclick="submitForm()">儲存</button>
@@ -143,14 +150,14 @@
     function toggleEditMode() {
         isEditMode = !isEditMode;
         document.getElementById('toggleBtn').innerText = isEditMode ? "完成" : "調整位置";
-        document.getElementById('cancelBtn').style.display = isEditMode ? "block" : "none"; // 顯示取消按鈕
+        document.getElementById('cancelBtn').style.display = isEditMode ? "block" : "none";
         document.body.classList.toggle('edit-mode');
         renderTimeline();
     }
 
     function renderDashboard(dayId) {
         const d = weatherData[dayId];
-        let html = d.isDouble ? `<div class="dashboard"><div class="weather-row"><div><span class="loc-tag">${d.loc1}</span><div class="temp-main">${d.temp1}</div></div><div style="text-align:right;"><span class="loc-tag">${d.loc2}</span><div class="temp-main">${d.temp2}</div></div></div><div class="memo-box">${d.memo}</div></div>`
+        let html = d.isDouble ? `<div class="dashboard"><div class="weather-row"><div><span class="loc-tag">${d.loc1}</span><div class="temp-main">${d.temp1}</div></div><div style="text-align:right;"><span class="loc-tag">${d.loc2}</span><div class="temp-main">${d.temp2}</div></div></div><div class="weather-desc">${d.desc}</div><div class="memo-box">${d.memo}</div></div>`
                    : `<div class="dashboard"><div class="weather-row"><div><span class="loc-tag">${d.loc}</span><div class="temp-main">${d.temp}</div><div class="weather-desc">${d.desc}</div></div><div style="font-size:40px;">☀️</div></div><div class="memo-box">${d.memo}</div></div>`;
         document.getElementById('dashboardArea').innerHTML = html;
     }
@@ -161,9 +168,18 @@
         renderDates(); renderTimeline();
     }
 
+    // 1. 日期標籤美化邏輯
     function renderDates() {
         const dates = ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04", "2026/03/05", "2026/03/06"];
-        document.getElementById('dateSelector').innerHTML = dates.map((d, i) => `<div class="date-box ${currentDay === d ? 'active' : ''}" onclick="setDay('${d}', 'D${i+1}')"><span class="day-num">${d.split('/')[1]}/${d.split('/')[2]}</span><span class="day-id">D${i+1}</span></div>`).join('');
+        const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+        document.getElementById('dateSelector').innerHTML = dates.map((d, i) => {
+            const dateObj = new Date(d);
+            const displayDate = `${dateObj.getMonth()+1}/${dateObj.getDate()}${weekdays[dateObj.getDay()]}`;
+            return `<div class="date-box ${currentDay === d ? 'active' : ''}" onclick="setDay('${d}', 'D${i+1}')">
+                <span class="day-num">${displayDate}</span>
+                <span class="day-id">Day${i+1}</span>
+            </div>`;
+        }).join('');
         renderDashboard(`D${dates.indexOf(currentDay)+1}`);
     }
 
@@ -189,17 +205,20 @@
             const [h, m] = item.時間.split(':').map(Number), itemMins = h * 60 + m, diff = currentMins - itemMins;
             if (diff >= 0 && diff < minDiff) { minDiff = diff; closestIndex = index; }
             
-            const keyword = item["Google map keyword"] || "";
-            // 2. 修復後的高品質 Google Maps 按鈕
-            const mapHtml = keyword ? `
-                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(keyword)}" class="map-link" target="_blank">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="margin-top:2px;">
-                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#4285F4"/>
-                    </svg>
-                    在地圖中開啟
-                </a>` : "";
-            const safeItem = JSON.stringify(item).replace(/"/g, '"');
+            // 2. 多重 Google Maps 連結生成邏輯
+            const keywordsRaw = item["Google map keyword"] || "";
+            const keywords = keywordsRaw.split(/[，,]/).map(k => k.trim()).filter(k => k);
+            let mapHtml = `<div class="map-links-container">`;
+            keywords.forEach(k => {
+                mapHtml += `
+                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(k)}" class="map-link" target="_blank">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#4285F4"/></svg>
+                        前往 ${k}
+                    </a>`;
+            });
+            mapHtml += `</div>`;
 
+            const safeItem = JSON.stringify(item).replace(/"/g, '"');
             const card = document.createElement('div');
             card.className = `event-card ${index === closestIndex ? 'is-current' : ''}`;
             if(index === closestIndex) card.id = 'active-task';
