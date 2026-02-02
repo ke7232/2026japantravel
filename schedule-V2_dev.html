@@ -8,14 +8,12 @@
         :root { --primary: #5c4ee5; --bg: #f5f6fa; --danger: #ff7675; --slot-h: 32px; }
         body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; overflow-x: hidden; scroll-behavior: smooth; }
         
-        /* 頂部區域 */
         .top-container { background: var(--primary); padding-bottom: 12px; position: sticky; top: 0; z-index: 2000; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         header { padding: 20px 20px 8px; display: flex; align-items: center; justify-content: space-between; color: white; }
         .main-title { font-size: 24px; font-weight: 900; letter-spacing: 1px; }
         .version-tag { font-size: 8px; background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); padding: 2px 6px; border-radius: 20px; }
 
-        /* 日期按鈕風格 */
-        .date-selector { display: flex; overflow-x: auto; padding: 10px 20px; gap: 8px; scrollbar-width: none; }
+        .date-selector { display: flex; overflow-x: auto; padding: 10px 20px; gap: 10px; scrollbar-width: none; }
         .date-box { 
             min-width: 90px; padding: 10px 6px; background: rgba(255,255,255,0.12); 
             border-radius: 10px; text-align: center; color: rgba(255,255,255,0.8); flex-shrink: 0; transition: 0.3s;
@@ -24,15 +22,22 @@
         .date-box .day-id { font-size: 16px; font-weight: 900; }
         .date-box.active { background: white; color: var(--primary); box-shadow: 0 6px 15px rgba(0,0,0,0.15); transform: translateY(-2px); }
 
-        /* 看板樣式 */
         body.edit-mode #dashboardArea { display: none; }
         .dashboard { 
             padding: 18px 22px; background: white; margin: 15px; border-radius: 20px; 
             box-shadow: 0 8px 25px rgba(0,0,0,0.03); border: 1px solid rgba(92, 78, 229, 0.05);
         }
-        .loc-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-        .loc-tag { font-size: 11px; background: #f2f3ff; color: var(--primary); padding: 4px 12px; border-radius: 8px; font-weight: 800; letter-spacing: 0.5px; }
-        .memo-text { font-size: 14px; color: #2d3436; font-weight: 800; line-height: 1.5; }
+        .loc-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+        .loc-tag { font-size: 11px; background: #f2f3ff; color: var(--primary); padding: 5px 12px; border-radius: 8px; font-weight: 800; letter-spacing: 0.5px; }
+        
+        .hotel-btn {
+            font-size: 10px; background: #ffffff; color: #2e7d32; padding: 4px 10px; border-radius: 20px;
+            text-decoration: none; font-weight: bold; border: 1px solid #e8f5e9; display: inline-flex; align-items: center; gap: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: 0.2s;
+        }
+        .hotel-btn:active { transform: scale(0.95); background: #f1f8e9; }
+
+        .memo-text { font-size: 15px; color: #2d3436; font-weight: 800; line-height: 1.5; }
 
         .timeline-container { display: flex; padding: 10px 15px; position: relative; }
         .hour-axis { width: 0; flex-shrink: 0; overflow: hidden; }
@@ -44,18 +49,16 @@
         body.edit-mode .timeline-line { display: none; }
         body.edit-mode .drop-zone { padding-left: 0; background-image: linear-gradient(#e0e0e0 1px, transparent 1px); background-size: 100% var(--slot-h); min-height: 2200px; }
 
-        /* 卡片內容 - white-space 是關鍵 */
         .event-card { background: white; border-radius: 20px; padding: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.04); display: flex; gap: 15px; align-items: center; position: relative; margin-bottom: 12px; transition: 0.3s; }
         .event-card::before { content: ""; position: absolute; left: -32px; top: 50%; width: 10px; height: 10px; background: var(--primary); border-radius: 50%; border: 3px solid #fff; transform: translateY(-50%); box-shadow: 0 0 0 2px #e0e0e0; }
         body.edit-mode .event-card::before { display: none; }
 
-        .card-content { font-size: 13px; color: #666; margin-top: 8px; line-height: 1.7; white-space: pre-wrap; word-break: break-all; }
+        .card-content { font-size: 13px; color: #666; margin-top: 8px; line-height: 1.8; white-space: pre-wrap; word-break: break-all; }
         .card-time-block { background: #f8f9fb; border-radius: 12px; min-width: 65px; height: 65px; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
         .time-hm { font-size: 18px; font-weight: 900; color: #333; }
         .card-main { flex-grow: 1; overflow: hidden; }
         .card-title { font-size: 16px; font-weight: 800; color: #2d3436; margin: 0; }
 
-        /* 地圖連結按鈕 */
         .map-links-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
         .map-link { 
             display: inline-flex; align-items: center; gap: 6px; 
@@ -64,7 +67,6 @@
             font-weight: 800; border: 1px solid #dadce0; 
             box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: 0.2s;
         }
-        .map-link:active { transform: scale(0.95); background: #f8f9fa; }
 
         .event-card.is-current::before { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(92, 78, 229, 0.2), 0 0 20px var(--primary); animation: pulseGlow 1.5s infinite; }
         @keyframes pulseGlow { 0%, 100% { transform: translateY(-50%) scale(1); } 50% { transform: translateY(-50%) scale(1.3); } }
@@ -97,7 +99,7 @@
         <div class="header-title-group">
             <div onclick="location.href='index.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
             <b class="main-title">輕井澤。東京</b>
-            <span class="version-tag">Ver. 0124-0300</span>
+            <span class="version-tag">Ver. 0124-0500</span>
         </div>
         <div style="display:flex; gap:10px; align-items:center;">
             <span id="cancelBtn" onclick="location.reload()" style="display:none; font-size:12px; cursor:pointer; opacity:0.8; color:white;">取消調整</span>
@@ -125,8 +127,8 @@
         <select id="fHour" style="flex:1; padding:12px; border-radius:15px; border:1px solid #eee;"></select>
         <select id="fMin" style="flex:1; padding:12px; border-radius:15px; border:1px solid #eee;"></select>
     </div>
-    <textarea id="fContent" rows="4" style="width:100%; padding:14px; border:1px solid #eee; border-radius:15px; margin:8px 0; box-sizing:border-box;" placeholder="備註景點 (手動換行即為分行)..."></textarea>
-    <input type="text" id="fKeyword" style="width:100%; padding:14px; border:1px solid #eee; border-radius:15px; margin:8px 0; box-sizing:border-box;" placeholder="地圖關鍵字 (多個請用逗號或分號隔開)">
+    <textarea id="fContent" rows="4" style="width:100%; padding:14px; border:1px solid #eee; border-radius:15px; margin:8px 0; box-sizing:border-box;" placeholder="備註景點 (Enter可手動換行)..."></textarea>
+    <input type="text" id="fKeyword" style="width:100%; padding:14px; border:1px solid #eee; border-radius:15px; margin:8px 0; box-sizing:border-box;" placeholder="地圖關鍵字 (多個請用逗號隔開)">
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:15px;">
         <button onclick="closeModal()" style="padding:12px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;">取消</button>
         <button style="background:var(--primary); color:white; padding:12px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;" onclick="submitForm()">儲存</button>
@@ -141,13 +143,14 @@
     const SLOT_PX = 32; 
     let allData = [], currentDay = "2026/03/01", isEditMode = false;
 
+    // 更新飯店資料
     const dashboardData = {
-        "D1": { loc: "輕井澤", memo: "抵達輕井澤，開啟雪國之旅。" },
-        "D2": { loc: "輕井澤", memo: "石之教堂行程，穿著發熱衣。" },
-        "D3": { loc: "輕井澤", memo: "Outlet 血拼日，準備好體力。" },
-        "D4": { isDouble: true, loc1: "輕井澤", loc2: "東京", memo: "搭乘新幹線前往東京。" },
-        "D5": { loc: "東京", memo: "感受東京文化魅力。" },
-        "D6": { loc: "東京", memo: "行程最終日，最後採買。" }
+        "D1": { loc: "輕井澤", hotel: "輕井澤王子大飯店西館", memo: "抵達輕井澤，開啟雪國之旅。" },
+        "D2": { loc: "輕井澤", hotel: "輕井澤王子大飯店西館", memo: "石之教堂行程，穿著發熱衣。" },
+        "D3": { loc: "輕井澤", hotel: "輕井澤王子大飯店西館", memo: "Outlet 血拼日，準備好體力。" },
+        "D4": { isDouble: true, loc1: "輕井澤", loc2: "東京", hotel: "唐草飯店東京站 karaksa hotel TOKYO STATION", memo: "搭乘新幹線前往東京。" },
+        "D5": { loc: "東京", hotel: "唐草飯店東京站 karaksa hotel TOKYO STATION", memo: "感受東京文化魅力。" },
+        "D6": { loc: "東京", hotel: "唐草飯店東京站 karaksa hotel TOKYO STATION", memo: "行程最終日，最後採買。" }
     };
 
     const hS = document.getElementById('fHour'), mS = document.getElementById('fMin');
@@ -164,9 +167,26 @@
 
     function renderDashboard(dayId) {
         const d = dashboardData[dayId];
+        const hotelLink = d.hotel ? `
+            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.hotel)}" class="hotel-btn" target="_blank">
+                🏠 今日飯店
+            </a>` : "";
+
         let html = d.isDouble ? 
-            `<div class="dashboard"><div class="loc-row"><span class="loc-tag">${d.loc1}</span><span style="opacity:0.3">→</span><span class="loc-tag">${d.loc2}</span></div><div class="memo-text">${d.memo}</div></div>` :
-            `<div class="dashboard"><div class="loc-row"><span class="loc-tag">${d.loc}</span></div><div class="memo-text">${d.memo}</div></div>`;
+            `<div class="dashboard">
+                <div class="loc-row">
+                    <span class="loc-tag">${d.loc1} → ${d.loc2}</span>
+                    ${hotelLink}
+                </div>
+                <div class="memo-text">${d.memo}</div>
+            </div>` :
+            `<div class="dashboard">
+                <div class="loc-row">
+                    <span class="loc-tag">${d.loc}</span>
+                    ${hotelLink}
+                </div>
+                <div class="memo-text">${d.memo}</div>
+            </div>`;
         document.getElementById('dashboardArea').innerHTML = html;
     }
 
@@ -230,16 +250,13 @@
             if(index === closestIndex) card.id = 'active-task';
             card.dataset.originTop = (itemMins / 15) * SLOT_PX;
 
-            // 修正換行邏輯：保留原始格式，僅由 pre-wrap 渲染
-            let displayContent = (item.內容 || ""); 
-
             card.innerHTML = `
                 <div class="drag-tooltip">00:00</div>
                 <div class="card-time-block"><span class="time-hm">${item.時間}</span></div>
                 <div class="card-main">
                     <h4 class="card-title">${item.標題}</h4>
                     <div class="card-detail">
-                        <div class="card-content">${displayContent}</div>
+                        <div class="card-content">${item.內容 || ""}</div>
                         ${mapHtml}
                     </div>
                 </div>
