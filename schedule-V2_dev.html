@@ -8,13 +8,11 @@
         :root { --primary: #5c4ee5; --bg: #f5f6fa; --danger: #ff7675; --slot-h: 32px; }
         body { font-family: "PingFang TC", sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; overflow-x: hidden; scroll-behavior: smooth; }
         
-        /* 1. 頂部區域緊湊化：移除多餘 block */
         .top-container { background: var(--primary); padding-bottom: 15px; position: sticky; top: 0; z-index: 2000; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         header { padding: 15px 20px 5px; display: flex; align-items: center; justify-content: space-between; color: white; }
         .main-title { font-size: 24px; font-weight: 900; letter-spacing: 1px; }
         .version-tag { font-size: 8px; background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); padding: 2px 6px; border-radius: 20px; }
 
-        /* 1. 按鈕重塑：方形標籤風格 */
         .date-selector { display: flex; overflow-x: auto; padding: 10px 20px; gap: 8px; scrollbar-width: none; }
         .date-box { 
             min-width: 90px; padding: 10px 6px; background: rgba(255,255,255,0.12); 
@@ -24,9 +22,15 @@
         .date-box .day-id { font-size: 16px; font-weight: 900; }
         .date-box.active { background: white; color: var(--primary); box-shadow: 0 6px 15px rgba(0,0,0,0.15); transform: translateY(-2px); }
 
+        /* 2. 精簡化看板樣式 */
         body.edit-mode #dashboardArea { display: none; }
-        .dashboard { padding: 20px; background: white; margin: 15px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .temp-main { font-size: 32px; font-weight: 900; color: #2d3436; margin: 5px 0; }
+        .dashboard { 
+            padding: 18px 22px; background: white; margin: 15px; border-radius: 20px; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.03); border: 1px solid rgba(92, 78, 229, 0.05);
+        }
+        .loc-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .loc-tag { font-size: 11px; background: #f2f3ff; color: var(--primary); padding: 5px 12px; border-radius: 8px; font-weight: 800; letter-spacing: 0.5px; }
+        .memo-text { font-size: 15px; color: #2d3436; font-weight: 800; line-height: 1.5; }
 
         .timeline-container { display: flex; padding: 10px 15px; position: relative; }
         .hour-axis { width: 0; flex-shrink: 0; overflow: hidden; }
@@ -48,7 +52,6 @@
         .card-main { flex-grow: 1; overflow: hidden; }
         .card-title { font-size: 16px; font-weight: 800; color: #2d3436; margin: 0; }
 
-        /* 2. 多重地圖連結樣式優化 */
         .map-links-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
         .map-link { 
             display: inline-flex; align-items: center; gap: 6px; 
@@ -90,7 +93,7 @@
         <div class="header-title-group">
             <div onclick="location.href='index.html'" style="cursor:pointer;"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" stroke-width="3"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></div>
             <b class="main-title">輕井澤。東京</b>
-            <span class="version-tag">Ver. 0124-0100</span>
+            <span class="version-tag">Ver. 0124-0200</span>
         </div>
         <div style="display:flex; gap:10px; align-items:center;">
             <span id="cancelBtn" onclick="location.reload()" style="display:none; font-size:12px; cursor:pointer; opacity:0.8; color:white;">取消調整</span>
@@ -119,7 +122,7 @@
         <select id="fMin" style="flex:1; padding:12px; border-radius:15px; border:1px solid #eee;"></select>
     </div>
     <textarea id="fContent" rows="4" style="width:100%; padding:14px; border:1px solid #eee; border-radius:15px; margin:8px 0; box-sizing:border-box;" placeholder="備註景點 (空格可自動分行)..."></textarea>
-    <input type="text" id="fKeyword" style="width:100%; padding:14px; border:1px solid #eee; border-radius:15px; margin:8px 0; box-sizing:border-box;" placeholder="地圖關鍵字 (多個請用逗號隔開)">
+    <input type="text" id="fKeyword" style="width:100%; padding:14px; border:1px solid #eee; border-radius:15px; margin:8px 0; box-sizing:border-box;" placeholder="地圖關鍵字 (多個請用逗號或分號隔開)">
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:15px;">
         <button onclick="closeModal()" style="padding:12px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;">取消</button>
         <button style="background:var(--primary); color:white; padding:12px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;" onclick="submitForm()">儲存</button>
@@ -134,13 +137,14 @@
     const SLOT_PX = 32; 
     let allData = [], currentDay = "2026/03/01", isEditMode = false;
 
-    const weatherData = {
-        "D1": { loc: "輕井澤", temp: "-2° / 6°", desc: "❄️ 晴時多雲", memo: "抵達輕井澤，開啟雪國之旅。" },
-        "D2": { loc: "輕井澤", temp: "-4° / 4°", desc: "☀️ 晴朗", memo: "石之教堂行程，穿著發熱衣。" },
-        "D3": { loc: "輕井澤", temp: "-1° / 7°", desc: "☁️ 多雲轉晴", memo: "Outlet 血拼日。" },
-        "D4": { isDouble: true, loc1: "輕井澤", temp1: "0°/6°", loc2: "東京", temp2: "8°/14°", desc: "移防東京", memo: "搭乘新幹線前往東京。" },
-        "D5": { loc: "東京", temp: "7° / 15°", desc: "☀️ 晴朗", memo: "感受東京魅力。" },
-        "D6": { loc: "東京", temp: "9° / 16°", desc: "🌧️ 局部雨", memo: "最後採買。" }
+    // 更新後的簡潔看板資料
+    const dashboardData = {
+        "D1": { loc: "輕井澤", memo: "抵達輕井澤，開啟雪國之旅。" },
+        "D2": { loc: "輕井澤", memo: "石之教堂行程，穿著發熱衣。" },
+        "D3": { loc: "輕井澤", memo: "Outlet 血拼日，準備好體力。" },
+        "D4": { isDouble: true, loc1: "輕井澤", loc2: "東京", memo: "搭乘新幹線前往東京。" },
+        "D5": { loc: "東京", memo: "感受東京文化魅力。" },
+        "D6": { loc: "東京", memo: "行程最終日，最後採買。" }
     };
 
     const hS = document.getElementById('fHour'), mS = document.getElementById('fMin');
@@ -155,10 +159,12 @@
         renderTimeline();
     }
 
+    // 2. 美化後的簡潔看板渲染
     function renderDashboard(dayId) {
-        const d = weatherData[dayId];
-        let html = d.isDouble ? `<div class="dashboard"><div class="weather-row"><div><span class="loc-tag">${d.loc1}</span><div class="temp-main">${d.temp1}</div></div><div style="text-align:right;"><span class="loc-tag">${d.loc2}</span><div class="temp-main">${d.temp2}</div></div></div><div class="weather-desc">${d.desc}</div><div class="memo-box">${d.memo}</div></div>`
-                   : `<div class="dashboard"><div class="weather-row"><div><span class="loc-tag">${d.loc}</span><div class="temp-main">${d.temp}</div><div class="weather-desc">${d.desc}</div></div><div style="font-size:40px;">☀️</div></div><div class="memo-box">${d.memo}</div></div>`;
+        const d = dashboardData[dayId];
+        let html = d.isDouble ? 
+            `<div class="dashboard"><div class="loc-row"><span class="loc-tag">${d.loc1}</span><span style="opacity:0.3">→</span><span class="loc-tag">${d.loc2}</span></div><div class="memo-text">${d.memo}</div></div>` :
+            `<div class="dashboard"><div class="loc-row"><span class="loc-tag">${d.loc}</span></div><div class="memo-text">${d.memo}</div></div>`;
         document.getElementById('dashboardArea').innerHTML = html;
     }
 
@@ -168,7 +174,6 @@
         renderDates(); renderTimeline();
     }
 
-    // 1. 日期標籤美化邏輯
     function renderDates() {
         const dates = ["2026/03/01", "2026/03/02", "2026/03/03", "2026/03/04", "2026/03/05", "2026/03/06"];
         const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
@@ -205,9 +210,9 @@
             const [h, m] = item.時間.split(':').map(Number), itemMins = h * 60 + m, diff = currentMins - itemMins;
             if (diff >= 0 && diff < minDiff) { minDiff = diff; closestIndex = index; }
             
-            // 2. 多重 Google Maps 連結生成邏輯
+            // 1. 修改：多重分隔符號通吃
             const keywordsRaw = item["Google map keyword"] || "";
-            const keywords = keywordsRaw.split(/[，,]/).map(k => k.trim()).filter(k => k);
+            const keywords = keywordsRaw.split(/[，,；;]/).map(k => k.trim()).filter(k => k);
             let mapHtml = `<div class="map-links-container">`;
             keywords.forEach(k => {
                 mapHtml += `
